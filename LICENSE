@@ -1,0 +1,13 @@
+
+---
+
+The following files include substantial content from
+https://github.com/alexgkendall/SegNet-Tutorial by Alex Kendall, licensed for
+non-commercial use under [CC-BY-NC
+license](http://creativecommons.org/licenses/by-nc/4.0/).
+
+segnet/README.md
+segnet/compute_bn_statistics.py
+segnet/test_segmentation.py
+
+
