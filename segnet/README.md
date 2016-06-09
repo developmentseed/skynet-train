@@ -19,9 +19,8 @@ The script saves the final test weights in the output directory as test_weights.
 
 ## Test Outputs
 `test_segmentation_camvid.py` will display the input image, ground truth and
-segmentation prediction for each test image, prefixing the filenames as
-specified in the arguments.
+segmentation prediction for each test image.
 
 ```sh
-python test_segmentation_camvid.py --model inference.prototxt --weights /path/to/weights/output/test_weights.caffemodel --iter XXX --output /path/to/results/output/image_prefix_
+python test_segmentation_camvid.py --model inference.prototxt --weights /path/to/weights/output/test_weights.caffemodel --output /path/to/results/output/
 ```

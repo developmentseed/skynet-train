@@ -5,6 +5,7 @@ matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 import os.path
+import re
 import json
 import scipy
 import argparse
@@ -21,9 +22,19 @@ import caffe
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, required=True)
 parser.add_argument('--weights', type=str, required=True)
-parser.add_argument('--iter', type=int, required=True)
 parser.add_argument('--output', type=str, required=True)
+parser.add_argument('--classes', type=str, required=True)
 args = parser.parse_args()
+
+with open(args.classes) as classes:
+	colors = map(lambda x : x['color'][1:], json.load(classes))
+	colors.append('000000')
+	colors = map(lambda rgbstr : tuple(map(ord, rgbstr.decode('hex'))), colors)
+
+model = open(args.model, 'r').read()
+m = re.search('source:\s*"(.*)"', model)
+test_data = m.group(1)
+test_data = open(test_data, 'r').readlines()
 
 caffe.set_mode_gpu()
 
@@ -32,7 +43,9 @@ net = caffe.Net(args.model,
                 caffe.TEST)
 
 
-for i in range(0, args.iter):
+outputs = []
+
+for i in range(0, len(test_data)):
 
 	net.forward()
 
@@ -50,13 +63,8 @@ for i in range(0, args.iter):
 	g_gt = label.copy()
 	b_gt = label.copy()
 
-	Water = [0,0,255]
-	Road = [255,255,255]
-	Building = [255,0,0]
-	Unlabelled = [0,0,0]
-
-	label_colours = np.array([Water, Road, Building, Unlabelled])
-	for l in range(0,3):
+	label_colours = np.array(colors)
+	for l in range(0,len(colors)):
 		r[ind==l] = label_colours[l,0]
 		g[ind==l] = label_colours[l,1]
 		b[ind==l] = label_colours[l,2]
@@ -77,18 +85,23 @@ for i in range(0, args.iter):
 	output = np.transpose(output, (1,2,0))
 	image = image[:,:,(2,1,0)]
 
-	scipy.misc.toimage(rgb, cmin=0.0, cmax=255).save(args.output + '_' + str(i) + '_prediction.png')
-	scipy.misc.toimage(image, cmin=0.0, cmax=255).save(args.output + '_' + str(i) + '_input.png')
-	scipy.misc.toimage(rgb_gt, cmin=0.0, cmax=255).save(args.output + '_' + str(i) + '_groundtruth.png')
+	prefix = os.path.join(args.output, str(i))
+	prediction = prefix + '_prediction.png'
+	input_image = prefix + '_input.png'
+	groundtruth = prefix + '_groundtruth.png'
+	scipy.misc.toimage(rgb, cmin=0.0, cmax=255).save(prediction)
+	scipy.misc.toimage(image, cmin=0.0, cmax=255).save(input_image)
+	scipy.misc.toimage(rgb_gt, cmin=0.0, cmax=255).save(groundtruth)
+	outputs.append({
+		'index': i,
+		'input': input_image,
+		'prediction': prediction,
+		'groundtruth': groundtruth,
+		'test_data': test_data[i]
+	})
 
-	# plt.figure()
-	# plt.imshow(image,vmin=0, vmax=1)
-	# plt.figure()
-	# plt.imshow(rgb_gt,vmin=0, vmax=1)
-	# plt.figure()
-	# plt.imshow(rgb,vmin=0, vmax=1)
-	# plt.show()
-
+with open(args.output + 'test.json', 'w') as outfile:
+	json.dump(outputs, outfile)
 
 print 'Success!'
 
