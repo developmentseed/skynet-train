@@ -1,6 +1,6 @@
 # https://github.com/BVLC/caffe/issues/861
-import matplotlib 
-matplotlib.use('Agg') 
+import matplotlib
+matplotlib.use('Agg')
 
 import numpy as np
 import matplotlib.pyplot as plt
