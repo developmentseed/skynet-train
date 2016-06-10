@@ -85,13 +85,12 @@ for i in range(0, len(test_data)):
 	output = np.transpose(output, (1,2,0))
 	image = image[:,:,(2,1,0)]
 
-	prefix = os.path.join(args.output, str(i))
-	prediction = prefix + '_prediction.png'
-	input_image = prefix + '_input.png'
-	groundtruth = prefix + '_groundtruth.png'
-	scipy.misc.toimage(rgb, cmin=0.0, cmax=255).save(prediction)
-	scipy.misc.toimage(image, cmin=0.0, cmax=255).save(input_image)
-	scipy.misc.toimage(rgb_gt, cmin=0.0, cmax=255).save(groundtruth)
+	prediction = str(i) + '_prediction.png'
+	input_image = str(i) + '_input.png'
+	groundtruth = str(i) + '_groundtruth.png'
+	scipy.misc.toimage(rgb, cmin=0.0, cmax=255).save(os.path.join(args.output, prediction))
+	scipy.misc.toimage(image, cmin=0.0, cmax=255).save(os.path.join(args.output, input_image))
+	scipy.misc.toimage(rgb_gt, cmin=0.0, cmax=255).save(os.path.join(args.output, groundtruth))
 	outputs.append({
 		'index': i,
 		'input': input_image,
@@ -100,7 +99,7 @@ for i in range(0, len(test_data)):
 		'test_data': test_data[i]
 	})
 
-with open(args.output + 'test.json', 'w') as outfile:
+with open(os.path.join(args.output, 'index.json'), 'w') as outfile:
 	json.dump(outputs, outfile)
 
 print 'Success!'
