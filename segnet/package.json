@@ -4,7 +4,7 @@
   "description": "(Adapted from http://mi.eng.cam.ac.uk/projects/segnet/tutorial.html) ## Batch Normalization",
   "main": "class-weights.js",
   "scripts": {
-      "bundle": "browserify view.js > dist/view.js"
+    "bundle": "browserify view.js > dist/view.js"
   },
   "keywords": [],
   "author": "Anand Thakker <vestibule@anandthakker.net> (http://anandthakker.net/)",
@@ -14,6 +14,12 @@
     "minimist": "^1.2.0"
   },
   "devDependencies": {
-    "browserify": "^13.0.1"
+    "browserify": "^13.0.1",
+    "es2020": "^1.1.6"
+  },
+  "browserify": {
+    "transform": [
+      "es2020"
+    ]
   }
 }
