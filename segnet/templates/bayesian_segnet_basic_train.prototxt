@@ -5,8 +5,9 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "TEST_DATA"	# Change this to the absolute path to your data file
-    batch_size: 1
+    source: "TRAINING_DATA"	 # Change this to the absolute path to your data file
+    batch_size: 16   			# Change this number to a batch size that will fit on your GPU
+    shuffle: true
   }
 }
 layer {
@@ -51,7 +52,6 @@ layer {
   name: "conv1_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -111,7 +111,6 @@ layer {
   name: "conv2_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -171,7 +170,6 @@ layer {
   name: "conv3_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -198,6 +196,15 @@ layer {
     pool: MAX
     kernel_size: 2
     stride: 2
+  }
+}
+layer {
+  name: "encdrop3"
+  type: "Dropout"
+  bottom: "pool3"
+  top: "pool3"
+  dropout_param {
+    dropout_ratio: 0.5
   }
 }
 layer {
@@ -231,7 +238,6 @@ layer {
   name: "conv4_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -258,6 +264,15 @@ layer {
     pool: MAX
     kernel_size: 2
     stride: 2
+  }
+}
+layer {
+  name: "encdrop4"
+  type: "Dropout"
+  bottom: "pool4"
+  top: "pool4"
+  dropout_param {
+    dropout_ratio: 0.5
   }
 }
 layer {
@@ -301,7 +316,6 @@ layer {
   name: "conv_decode4_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -311,6 +325,15 @@ layer {
 	  value: 0.001
 	}
  }
+}
+layer {
+  name: "decdrop4"
+  type: "Dropout"
+  bottom: "conv_decode4"
+  top: "conv_decode4"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
 }
 layer {
   name: "upsample3"
@@ -353,7 +376,6 @@ layer {
   name: "conv_decode3_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -363,6 +385,15 @@ layer {
 	  value: 0.001
 	}
  }
+}
+layer {
+  name: "decdrop3"
+  type: "Dropout"
+  bottom: "conv_decode3"
+  top: "conv_decode3"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
 }
 layer {
   name: "upsample2"
@@ -405,7 +436,6 @@ layer {
   name: "conv_decode2_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -457,7 +487,6 @@ layer {
   name: "conv_decode1_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -469,10 +498,10 @@ layer {
  }
 }
 layer {
-  name: "conv_classifier"
+  name: "dense_softmax_inner_prod"
   type: "Convolution"
   bottom: "conv_decode1"
-  top: "conv_classifier"
+  top: "dense_softmax_inner_prod"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -493,9 +522,22 @@ layer {
   }
 }
 layer {
-  name: "prob"
-  type: "Softmax"
-  bottom: "conv_classifier"
-  top: "prob"
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "dense_softmax_inner_prod"
+  bottom: "label"
+  top: "loss"
   softmax_param {engine: CAFFE}
+  loss_param: {
+    weight_by_label_freqs: true
+    CLASS_WEIGHTING
+  }
+}
+layer {
+  name: "accuracy"
+  type: "Accuracy"
+  bottom: "dense_softmax_inner_prod"
+  bottom: "label"
+  top: "accuracy"
+  top: "per_class_accuracy"
 }

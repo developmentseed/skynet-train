@@ -6,7 +6,7 @@ layer {
   top: "label"
   dense_image_data_param {
     source: "TEST_DATA"	# Change this to the absolute path to your data file
-    batch_size: 1
+    batch_size: 8  # Change this to be the number of Monte Carlo Dropout samples you wish to make
   }
 }
 layer {
@@ -201,6 +201,16 @@ layer {
   }
 }
 layer {
+  name: "encdrop3"
+  type: "Dropout"
+  bottom: "pool3"
+  top: "pool3"
+  dropout_param {
+    dropout_ratio: 0.5
+    sample_weights_test: true
+  }
+}
+layer {
   name: "conv4"
   type: "Convolution"
   bottom: "pool3"
@@ -261,6 +271,16 @@ layer {
   }
 }
 layer {
+  name: "encdrop4"
+  type: "Dropout"
+  bottom: "pool4"
+  top: "pool4"
+  dropout_param {
+    dropout_ratio: 0.5
+    sample_weights_test: true
+  }
+}
+layer {
   name: "upsample4"
   type: "Upsample"
   bottom: "pool4"
@@ -313,6 +333,16 @@ layer {
  }
 }
 layer {
+  name: "decdrop4"
+  type: "Dropout"
+  bottom: "conv_decode4"
+  top: "conv_decode4"
+  dropout_param {
+    dropout_ratio: 0.5
+    sample_weights_test: true
+  }
+}
+layer {
   name: "upsample3"
   type: "Upsample"
   bottom: "conv_decode4"
@@ -363,6 +393,16 @@ layer {
 	  value: 0.001
 	}
  }
+}
+layer {
+  name: "decdrop3"
+  type: "Dropout"
+  bottom: "conv_decode3"
+  top: "conv_decode3"
+  dropout_param {
+    dropout_ratio: 0.5
+    sample_weights_test: true
+  }
 }
 layer {
   name: "upsample2"
@@ -469,10 +509,10 @@ layer {
  }
 }
 layer {
-  name: "conv_classifier"
+  name: "dense_softmax_inner_prod"
   type: "Convolution"
   bottom: "conv_decode1"
-  top: "conv_classifier"
+  top: "dense_softmax_inner_prod"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -495,7 +535,7 @@ layer {
 layer {
   name: "prob"
   type: "Softmax"
-  bottom: "conv_classifier"
+  bottom: "dense_softmax_inner_prod"
   top: "prob"
   softmax_param {engine: CAFFE}
 }
