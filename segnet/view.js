@@ -1,5 +1,9 @@
 const http = require('choo/http')
 const choo = require('choo')
+const qs = require('querystring')
+
+var query = qs.parse(window.location.search.substring(1))
+var baseurl = query.baseurl || ''
 
 const app = choo()
 
@@ -28,16 +32,18 @@ app.model({
 
 const view = (params, state, send) => choo.view`
   <main>
-  ${state.app.items
-    .slice(0, state.app.limit)
-    .map(item => choo.view`
-         <div>
-           <img src=${item.input}></img>
-           <img src=${item.groundtruth}></img>
-           <img src=${item.prediction}></img>
-         </div>
-    `)
+  <ul class='results'>
+      ${state.app.items
+      .slice(0, state.app.limit)
+      .map(item => choo.view`
+           <li>
+           <img style='width: 33%' src=${getSatelliteTileURL(item)}></img>
+           <img style='width: 33%' src=${baseurl + item.groundtruth}></img>
+           <img style='width: 33%' src=${baseurl + item.prediction}></img>
+           </li>
+           `)
   }
+  </ul>
   ${state.app.limit < state.app.items.length
     ? choo.view`<button onclick=${() => send('app:loadMore')}>Load More</button>`
     : ''}
@@ -50,9 +56,19 @@ app.router((route) => [
 
 document.body.appendChild(app.start())
 
+function getSatelliteTileURL(item) {
+  var match = /(\d*)-(\d*)-(\d*).png/.exec(item.test_data)
+  console.log(match)
+  return 'http://b.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png'
+    .replace('{z}', match[1])
+    .replace('{x}', match[2])
+    .replace('{y}', match[3]) +
+    '?access_token=' + query.access_token
+}
+
 function getJson (state, action, send) {
   console.log('getJson', state, action)
-  http.get('index.json', { json: true }, function (err, res, body) {
+  http.get(baseurl + 'index.json', { json: true }, function (err, res, body) {
     if (err) return send('app:error', { payload: err.message })
     if (res.statusCode !== 200 || !body) {
       return send('app:error', { payload:'something went wrong' })
