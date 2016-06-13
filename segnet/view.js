@@ -1,9 +1,31 @@
+const qs = require('querystring')
 const http = require('choo/http')
 const choo = require('choo')
-const qs = require('querystring')
+const mapboxgl = require('mapbox-gl')
+const tilebelt = require('tilebelt')
 
-var query = qs.parse(window.location.search.substring(1))
-var baseurl = query.baseurl || ''
+const query = qs.parse(window.location.search.substring(1))
+const baseurl = query.baseurl || ''
+
+mapboxgl.accessToken = query.access_token
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/satellite-v8',
+  center: [-74.50, 40],
+  zoom: 9
+})
+.on('load', function () {
+  map.addSource('tile', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+  map.addLayer({
+    'id': 'tile',
+    'source': 'tile',
+    'type': 'line',
+    'paint': {
+      'line-color': 'red',
+      'line-width': 4
+    }
+  })
+})
 
 const app = choo()
 
@@ -31,15 +53,20 @@ app.model({
 })
 
 const view = (params, state, send) => choo.view`
-  <main>
-  <ul class='results'>
+  <div>
+  <ul>
+      <li class="header">
+        <div>Input Image</div>
+        <div>OSM "ground truth"</div>
+        <div>Net Prediction</div>
+      </li>
       ${state.app.items
       .slice(0, state.app.limit)
       .map(item => choo.view`
-           <li>
-           <img style='width: 33%' src=${getSatelliteTileURL(item)}></img>
-           <img style='width: 33%' src=${baseurl + item.groundtruth}></img>
-           <img style='width: 33%' src=${baseurl + item.prediction}></img>
+           <li data-tile=${getTile(item)} onclick=${onClick}>
+           <img src=${getSatelliteTileURL(item)}></img>
+           <img src=${baseurl + item.groundtruth}></img>
+           <img src=${baseurl + item.prediction}></img>
            </li>
            `)
   }
@@ -47,23 +74,82 @@ const view = (params, state, send) => choo.view`
   ${state.app.limit < state.app.items.length
     ? choo.view`<button onclick=${() => send('app:loadMore')}>Load More</button>`
     : ''}
-  </main>
+  </div>
 `
 
 app.router((route) => [
   route('/', logged(view, 'view'))
 ])
 
-document.body.appendChild(app.start())
+document.querySelector('#app').appendChild(app.start())
 
-function getSatelliteTileURL(item) {
+function getTile (item) {
   var match = /(\d*)-(\d*)-(\d*).png/.exec(item.test_data)
-  console.log(match)
+  return match.slice(1, 4)
+}
+function getSatelliteTileURL(item) {
+  var tile = getTile(item)
   return 'http://b.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png'
-    .replace('{z}', match[1])
-    .replace('{x}', match[2])
-    .replace('{y}', match[3]) +
+    .replace('{z}', tile[0])
+    .replace('{x}', tile[1])
+    .replace('{y}', tile[2]) +
     '?access_token=' + query.access_token
+}
+
+function onClick (event) {
+  var tile = event.currentTarget.dataset.tile.split(',').map(Number)
+  tile = [tile[1], tile[2], tile[0]]
+  var [w, s, e, n] = tilebelt.tileToBBOX(tile)
+  var z = +tile[2]
+
+  var coordinates = [
+    [w, n],
+    [e, n],
+    [e, s],
+    [w, s]
+  ]
+
+  map.jumpTo({center: [ (w + e) / 2, (s + n) / 2 ], zoom: z - 1, speed: 2})
+  map.getSource('tile').setData({
+    type: 'Feature',
+    properties: {},
+    geometry: {
+      type: 'Polygon',
+      coordinates: [ coordinates.concat([[w,n]]) ]
+    }
+  })
+
+  var gt = event.currentTarget.querySelector('img:last-child')
+  showOverlay(gt.src, coordinates)
+}
+
+function showOverlay (url, coords) {
+  console.log('show overlay', url, coords)
+  if (map.getLayer('class-overlay')) {
+    map.removeLayer('class-overlay')
+  }
+  if (map.getSource('class-overlay')) {
+    map.removeSource('class-overlay')
+  }
+
+  map.addSource('class-overlay', {
+    type: 'image',
+    url: url,
+    coordinates: coords
+  })
+
+  map.on('render', addImageLayer)
+  function addImageLayer () {
+    if (map.getSource('class-overlay').loaded()) {
+      map.off('render', addImageLayer)
+      map.addLayer({
+        'id': 'class-overlay',
+        'source': 'class-overlay',
+        'type': 'raster',
+        'paint': { 'raster-opacity': 0.5 }
+      })
+    }
+  }
 }
 
 function getJson (state, action, send) {
