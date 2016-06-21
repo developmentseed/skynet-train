@@ -33,6 +33,11 @@ def is_x_axis_field(field):
     return field in x_axis_fields
 
 
+def is_y_axis_field(field):
+    x_axis_only_fields = ['Seconds']
+    return not (field in x_axis_only_fields)
+
+
 def create_field_index():
     train_key = 'Train'
     test_key = 'Test'
@@ -55,7 +60,7 @@ def get_supported_chart_types():
     num_fields = len(fields)
     supported_chart_types = []
     for i in xrange(num_fields):
-        if not is_x_axis_field(fields[i]):
+        if is_y_axis_field(fields[i]):
             for j in xrange(num_fields):
                 if i != j and is_x_axis_field(fields[j]):
                     supported_chart_types.append('%s%s%s' % (
@@ -71,6 +76,8 @@ def get_chart_type_description(chart_type):
 
 
 def get_data_file_type(chart_type):
+    if chart_type == 0:
+        return 'Train'
     description = get_chart_type_description(chart_type)
     data_file_type = description.split()[0]
     return data_file_type
@@ -194,7 +201,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('inputs', metavar='FILE.log', type=str, nargs='+')
     parser.add_argument('--output', type=str)
-    parser.add_argument('--type', type=int, default=6)
+    parser.add_argument('--type', type=int, default=7)
     parser.add_argument('--smooth', type=int, default=50)
     parser.add_argument('--watch', type=bool, default=False)
     args = parser.parse_args()
