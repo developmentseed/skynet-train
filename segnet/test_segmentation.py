@@ -98,9 +98,9 @@ for i in range(0, len(test_data)):
         'groundtruth': groundtruth,
         'test_data': test_data[i]
     })
+    print(outputs[-1])
 
 with open(os.path.join(args.output, 'index.json'), 'w') as outfile:
     json.dump(outputs, outfile)
 
 print 'Success!'
-
