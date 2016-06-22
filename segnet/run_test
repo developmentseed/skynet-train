@@ -2,20 +2,21 @@
 
 var fs = require('fs-extra')
 var path = require('path')
-var execFile = require('child_process').execFile
+var spawnSync = require('child_process').spawnSync
 var argv = require('minimist')(process.argv.slice(2))
 
 var computeStats = path.join(__dirname, 'compute_bn_statistics.py')
 var runTest = path.join(__dirname, 'test_segmentation.py')
 
-if (argv._.length < 2 || !(argv.o || argv.output)) {
-  console.error('Usage: ' + process.argv.slice(0, 2).join(' ') + 'train.prototxt weights.caffemodel -o /path/to/results/output')
+if (!argv.train || !argv.weights || !argv.classes || !argv.output) {
+  console.error('Usage: ' + process.argv.slice(0, 2).join(' ') + ' train.prototxt weights.caffemodel -o /path/to/results/output')
   process.exit(1)
 }
 
-var train = path.resolve(argv._[0])
-var weights = path.resolve(argv._[1])
-var output = path.resolve(argv.output || argv.o)
+var train = path.resolve(argv.train)
+var weights = path.resolve(argv.weights)
+var classes = path.resolve(argv.classes)
+var output = path.resolve(argv.output)
 
 // guess the inference.prototxt filename
 var inference = argv.inference || train.replace('train', 'inference')
@@ -25,22 +26,22 @@ var inferenceDir = weights.replace('.caffemodel', '.inference')
 
 fs.mkdirSync(inferenceDir)
 
-execFile('python', [
+spawnSync('python', [
   computeStats,
   train,
   weights,
   inferenceDir
-], function (err) {
-  if (err) { throw err }
-  execFile('python', [
-    runTest,
-    '--model', inference,
-    '--weights', path.join(inferenceDir, 'test_weights.caffemodel'),
-    '--output', output
-  ], function (err) {
-    if (err) { throw err }
-    fs.copySync(path.join(__dirname, 'dist'), output)
-    console.log('Done!')
-  })
-})
+], { stdio: 'inherit' })
+
+spawnSync('python', [
+  runTest,
+  '--model', inference,
+  '--weights', path.join(inferenceDir, 'test_weights.caffemodel'),
+  '--classes', classes,
+  '--output', output
+], { stdio: 'inherit' })
+
+fs.copySync(path.join(__dirname, 'dist'), output)
+
+console.log('Done!')
 
