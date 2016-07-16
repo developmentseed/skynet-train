@@ -3,13 +3,20 @@
 var fs = require('fs-extra')
 var path = require('path')
 var spawnSync = require('child_process').spawnSync
-var argv = require('minimist')(process.argv.slice(2))
+var argv = require('minimist')(process.argv.slice(2), {
+  alias: {
+    output: 'o',
+    train: 't',
+    weight: 'w',
+    classes: 'c'
+  }
+})
 
 var computeStats = path.join(__dirname, 'compute_bn_statistics.py')
 var runTest = path.join(__dirname, 'test_segmentation.py')
 
 if (!argv.train || !argv.weights || !argv.classes || !argv.output) {
-  console.error('Usage: ' + process.argv.slice(0, 2).join(' ') + ' train.prototxt weights.caffemodel -o /path/to/results/output')
+  console.error('Usage: ' + process.argv.slice(0, 2).join(' ') + ' --train train.prototxt --weights weights.caffemodel --classes class-defs.json --output /path/to/results/output')
   process.exit(1)
 }
 
@@ -26,6 +33,7 @@ var inferenceDir = weights.replace('.caffemodel', '.inference')
 
 fs.mkdirSync(inferenceDir)
 
+console.log('Computing batch normalization stats.')
 spawnSync('python', [
   computeStats,
   train,
@@ -33,6 +41,7 @@ spawnSync('python', [
   inferenceDir
 ], { stdio: 'inherit' })
 
+console.log('Running inference.')
 spawnSync('python', [
   runTest,
   '--model', inference,

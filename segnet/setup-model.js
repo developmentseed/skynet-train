@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 // Set up the caffe model prototxt files for a given training data set
 
 var fs = require('fs')
@@ -23,13 +24,14 @@ var cw = classWeights(stats).map(function (weight) {
   return 'class_weighting: ' + weight
 })
 
-var trainTemplate = path.join(__dirname, 'templates', model + '_train.prototxt')
-var testTemplate = path.join(__dirname, 'templates', model + '_inference.prototxt')
 
-renderModel(trainTemplate, cw, output)
-renderModel(testTemplate, cw, output)
+renderModel('train', model, cw, output)
+renderModel('inference', model, cw, output)
 
-function renderModel (template, classWeights, outputDir) {
+// phase: 'train' or 'inference'
+// model: 'segnet' or 'segnet_basic'
+function renderModel (phase, model, classWeights, outputDir) {
+  var template = path.join(__dirname, 'templates', model + '_' + phase + '.prototxt')
   var tmpl = fs.readFileSync(template, 'utf-8')
     .replace(/TRAINING_DATA/g, trainingData)
     .replace(/TEST_DATA/g, testData)
