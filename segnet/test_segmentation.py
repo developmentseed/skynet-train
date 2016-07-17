@@ -14,6 +14,8 @@ sys.path.insert(0, caffe_root + 'python')
 
 import caffe
 
+from metrics import complete_and_correct
+
 
 # Import arguments
 parser = argparse.ArgumentParser()
@@ -52,14 +54,16 @@ for i in range(0, len(test_data)):
     predicted = net.blobs['prob'].data
     image = np.squeeze(image[0, :, :, :])
     output = np.squeeze(predicted[0, :, :, :])
+    label = np.squeeze(label)
 
-    fg = output[:-1, :, :]
+    metrics = complete_and_correct(output, label, 3, 0.5)
+    print(metrics)
 
-    ind = np.argmax(output, axis=0)
-    bg = ind.copy()
-    bg[:] = num_classes - 1
     # only use the max-probability non-background class if its probability is
     # above some threshold
+    ind = np.argmax(output, axis=0)
+    fg = output[:-1, :, :]  # foreground classes only
+    bg = np.full(ind.shape, num_classes - 1)
     ind = np.where(np.max(fg, axis=0) > 0.5, ind, bg)
 
     r = ind.copy()
@@ -115,7 +119,8 @@ for i in range(0, len(test_data)):
         'input': input_image,
         'prediction': prediction,
         'groundtruth': groundtruth,
-        'test_data': test_data[i]
+        'test_data': test_data[i],
+        'metrics': metrics
     })
 
 with open(os.path.join(args.output, 'index.json'), 'w') as outfile:

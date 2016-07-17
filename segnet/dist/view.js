@@ -3648,7 +3648,7 @@ module.exports = [
 
 },{}],39:[function(require,module,exports){
 var _templateObject = _taggedTemplateLiteral(['\n  <div>\n  <ul>\n      <li class="header">\n        <div>Input Image</div>\n        <div>OSM "ground truth"</div>\n        <div>Net Prediction</div>\n      </li>\n      ', '\n  </ul>\n  ', '\n  </div>\n'], ['\n  <div>\n  <ul>\n      <li class="header">\n        <div>Input Image</div>\n        <div>OSM "ground truth"</div>\n        <div>Net Prediction</div>\n      </li>\n      ', '\n  </ul>\n  ', '\n  </div>\n']),
-    _templateObject2 = _taggedTemplateLiteral(['\n           <li data-tile=', ' onclick=', '>\n           <img src=', '></img>\n           <img src=', '></img>\n           <img src=', '></img>\n           </li>\n           '], ['\n           <li data-tile=', ' onclick=', '>\n           <img src=', '></img>\n           <img src=', '></img>\n           <img src=', '></img>\n           </li>\n           ']),
+    _templateObject2 = _taggedTemplateLiteral(['\n           <li data-tile=', '>\n               <img src=', ' onclick=', '></img>\n               <img src=', ' onclick=', '></img>\n               <img src=', ' onclick=', '></img>\n               <div>\n                Completeness: ', '\n                Correctness: ', '\n               </div>\n           </li>\n           '], ['\n           <li data-tile=', '>\n               <img src=', ' onclick=', '></img>\n               <img src=', ' onclick=', '></img>\n               <img src=', ' onclick=', '></img>\n               <div>\n                Completeness: ', '\n                Correctness: ', '\n               </div>\n           </li>\n           ']),
     _templateObject3 = _taggedTemplateLiteral(['<button onclick=', '>Load More</button>'], ['<button onclick=', '>Load More</button>']);
 
 function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
@@ -3717,7 +3717,7 @@ app.model({
 
 var view = function (params, state, send) {
   return choo.view(_templateObject, state.app.items.slice(0, state.app.limit).map(function (item) {
-    return choo.view(_templateObject2, getTile(item), onClick, getSatelliteTileURL(item), baseurl + item.groundtruth, baseurl + item.prediction);
+    return choo.view(_templateObject2, getTile(item), getSatelliteTileURL(item), onClick, baseurl + item.groundtruth, onClick, baseurl + item.prediction, onClick, item.metrics.completeness_score.toFixed(3), item.metrics.correctness_score.toFixed(3));
   }), state.app.limit < state.app.items.length ? choo.view(_templateObject3, function () {
     return send('app:loadMore');
   }) : '');
@@ -3739,7 +3739,7 @@ function getSatelliteTileURL(item) {
 }
 
 function onClick(event) {
-  var tile = event.currentTarget.dataset.tile.split(',').map(Number);
+  var tile = event.currentTarget.parentNode.dataset.tile.split(',').map(Number);
   tile = [tile[1], tile[2], tile[0]];
   var [w, s, e, n] = tilebelt.tileToBBOX(tile);
   var z = +tile[2];
@@ -3756,8 +3756,7 @@ function onClick(event) {
     }
   });
 
-  var gt = event.currentTarget.querySelector('img:last-child');
-  showOverlay(gt.src, coordinates);
+  showOverlay(event.currentTarget.src, coordinates);
 }
 
 function showOverlay(url, coords) {

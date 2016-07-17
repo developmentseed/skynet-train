@@ -63,10 +63,14 @@ const view = (params, state, send) => choo.view`
       ${state.app.items
       .slice(0, state.app.limit)
       .map(item => choo.view`
-           <li data-tile=${getTile(item)} onclick=${onClick}>
-           <img src=${getSatelliteTileURL(item)}></img>
-           <img src=${baseurl + item.groundtruth}></img>
-           <img src=${baseurl + item.prediction}></img>
+           <li data-tile=${getTile(item)}>
+               <img src=${getSatelliteTileURL(item)} onclick=${onClick}></img>
+               <img src=${baseurl + item.groundtruth} onclick=${onClick}></img>
+               <img src=${baseurl + item.prediction} onclick=${onClick}></img>
+               <div>
+                Completeness: ${item.metrics.completeness_score.toFixed(3)}
+                Correctness: ${item.metrics.correctness_score.toFixed(3)}
+               </div>
            </li>
            `)
   }
@@ -97,7 +101,7 @@ function getSatelliteTileURL(item) {
 }
 
 function onClick (event) {
-  var tile = event.currentTarget.dataset.tile.split(',').map(Number)
+  var tile = event.currentTarget.parentNode.dataset.tile.split(',').map(Number)
   tile = [tile[1], tile[2], tile[0]]
   var [w, s, e, n] = tilebelt.tileToBBOX(tile)
   var z = +tile[2]
@@ -119,8 +123,7 @@ function onClick (event) {
     }
   })
 
-  var gt = event.currentTarget.querySelector('img:last-child')
-  showOverlay(gt.src, coordinates)
+  showOverlay(event.currentTarget.src, coordinates)
 }
 
 function showOverlay (url, coords) {
