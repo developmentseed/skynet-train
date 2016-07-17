@@ -7,7 +7,7 @@ var argv = require('minimist')(process.argv.slice(2), {
   alias: {
     output: 'o',
     train: 't',
-    weight: 'w',
+    weights: 'w',
     classes: 'c'
   }
 })
@@ -17,6 +17,7 @@ var runTest = path.join(__dirname, 'test_segmentation.py')
 
 if (!argv.train || !argv.weights || !argv.classes || !argv.output) {
   console.error('Usage: ' + process.argv.slice(0, 2).join(' ') + ' --train train.prototxt --weights weights.caffemodel --classes class-defs.json --output /path/to/results/output')
+  console.log(argv)
   process.exit(1)
 }
 
