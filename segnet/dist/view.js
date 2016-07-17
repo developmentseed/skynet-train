@@ -3647,7 +3647,7 @@ module.exports = [
 ]
 
 },{}],39:[function(require,module,exports){
-var _templateObject = _taggedTemplateLiteral(['\n    <div>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  '], ['\n    <div>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  ']),
+var _templateObject = _taggedTemplateLiteral(['\n    <div>\n    <dl>\n      <dt>Total Correctness:</dt>\n      <dd>', '</dd>\n      <dt>Total Completeness:</dt>\n      <dd>', '</dd>\n    </dl>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  '], ['\n    <div>\n    <dl>\n      <dt>Total Correctness:</dt>\n      <dd>', '</dd>\n      <dt>Total Completeness:</dt>\n      <dd>', '</dd>\n    </dl>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  ']),
     _templateObject2 = _taggedTemplateLiteral(['\n             <li data-tile=', '>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 <div>\n                  Completeness: ', '\n                  Correctness: ', '\n                 </div>\n             </li>\n             '], ['\n             <li data-tile=', '>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 <div>\n                  Completeness: ', '\n                  Correctness: ', '\n                 </div>\n             </li>\n             ']),
     _templateObject3 = _taggedTemplateLiteral(['<button onclick=', '>Load More</button>'], ['<button onclick=', '>Load More</button>']);
 
@@ -3692,7 +3692,16 @@ app.model({
   ],
   reducers: {
     'setTestOutput': function (action, state) {
-      return { items: action.payload };
+      var items = action.payload;
+      var metrics = items.reduce(function (memo, item) {
+        return {
+          correct: memo.correct + sum(item.metrics.pixels_correct),
+          complete: memo.complete + sum(item.metrics.pixels_complete),
+          predicted_fg: memo.predicted_fg + sum(item.metrics.pixels_predicted.slice(0, -1)),
+          actual_fg: memo.actual_fg + sum(item.metrics.pixels_actual.slice(0, -1))
+        };
+      }, { correct: 0, complete: 0, predicted_fg: 0, actual_fg: 0 });
+      return { items: items, metrics: metrics };
     },
     'loadMore': logged(function (action, state) {
       return { limit: state.limit + 50 };
@@ -3727,7 +3736,14 @@ var view = function (params, state, send) {
     return sort[1] === 'ascending' ? diff : -diff;
   });
 
-  return choo.view(_templateObject, function () {
+  var correctness = 0;
+  var completeness = 0;
+  if (state.app.metrics) {
+    correctness = state.app.metrics.correct / state.app.metrics.predicted_fg;
+    completeness = state.app.metrics.complete / state.app.metrics.actual_fg;
+  }
+
+  return choo.view(_templateObject, correctness.toFixed(3), completeness.toFixed(3), function () {
     return send('app:sort', { key: 'correctness_score:descending' });
   }, function () {
     return send('app:sort', { key: 'correctness_score:ascending' });
@@ -3826,6 +3842,12 @@ function logged(view, tag) {
     console.log(tag || '', arguments);
     return view.apply(this, Array.prototype.slice.call(arguments));
   };
+}
+
+function sum(arr) {
+  return arr.reduce(function (memo, x) {
+    return memo + x;
+  }, 0);
 }
 },{"choo":6,"choo/http":5,"mapbox-gl":109,"querystring":22,"tilebelt":212}],40:[function(require,module,exports){
 // (c) Dean McNamee <dean@gmail.com>, 2012.

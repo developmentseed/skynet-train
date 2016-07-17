@@ -36,7 +36,16 @@ app.model({
     function (send) { send('http:get_json') } // grab json data at startup
   ],
   reducers: {
-    'setTestOutput': (action, state) => ({ items: action.payload }),
+    'setTestOutput': (action, state) => {
+      const items = action.payload
+      const metrics = items.reduce((memo, item) => ({
+        correct: memo.correct + sum(item.metrics.pixels_correct),
+        complete: memo.complete + sum(item.metrics.pixels_complete),
+        predicted_fg: memo.predicted_fg + sum(item.metrics.pixels_predicted.slice(0, -1)),
+        actual_fg: memo.actual_fg + sum(item.metrics.pixels_actual.slice(0, -1))
+      }), { correct: 0, complete: 0, predicted_fg: 0, actual_fg: 0 })
+      return { items: items, metrics: metrics }
+    },
     'loadMore': logged((action, state) => ({ limit: state.limit + 50 }), 'loadMore'),
     'sort': (action, state) => ({ sort: action.key })
   },
@@ -64,8 +73,22 @@ const view = (params, state, send) => {
     return sort[1] === 'ascending' ? diff : -diff
   })
 
+  let correctness = 0
+  let completeness = 0
+  if (state.app.metrics) {
+    correctness = state.app.metrics.correct / state.app.metrics.predicted_fg
+    completeness = state.app.metrics.complete / state.app.metrics.actual_fg
+  }
+
+
   return choo.view`
     <div>
+    <dl>
+      <dt>Total Correctness:</dt>
+      <dd>${correctness.toFixed(3)}</dd>
+      <dt>Total Completeness:</dt>
+      <dd>${completeness.toFixed(3)}</dd>
+    </dl>
     <button onclick=${() => send('app:sort', { key: 'correctness_score:descending' })}>Most Correct</button>
     <button onclick=${() => send('app:sort', { key: 'correctness_score:ascending' })}>Least Correct</button>
     <button onclick=${() => send('app:sort', { key: 'completeness_score:descending' })}>Most Complete</button>
@@ -191,4 +214,8 @@ function logged (view, tag) {
     console.log(tag || '', arguments)
     return view.apply(this, Array.prototype.slice.call(arguments))
   }
+}
+
+function sum (arr) {
+  return arr.reduce((memo, x) => memo + x, 0)
 }
