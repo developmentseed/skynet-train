@@ -141,7 +141,14 @@ def runningMeanFast(x, N):
     return np.convolve(np.array(x), np.ones((N,)) / N, 'valid')
 
 
-def plot_chart(chart_type, path_to_png, path_to_log, smooth):
+def plot_chart(chart_type, path_to_png, logpath, smooth):
+    logpath = logpath.split(':')
+    path_to_log = logpath[0]
+    if len(logpath) == 1:
+        shift = 0
+    else:
+        shift = int(logpath[1])
+
     os.system('%s %s' % (get_log_parsing_script(), path_to_log))
     data_file = get_data_file(chart_type, path_to_log)
     x_axis_field, y_axis_field = get_field_descriptions(chart_type)
@@ -157,6 +164,7 @@ def plot_chart(chart_type, path_to_png, path_to_log, smooth):
     if smooth and smooth > 0 and len(data[0]) > smooth:
         data[1] = runningMeanFast(data[1], smooth)
         data[0] = data[0][:len(data[1])]
+        data[0] = [d + shift for d in data[0]]
 
     plt.plot(data[0], data[1], label=label, color=color,
              linewidth=linewidth)
@@ -217,7 +225,8 @@ if __name__ == '__main__':
         path_to_png = path_to_png + '.png'
 
     path_to_log_list = args.inputs
-    for path_to_log in path_to_log_list:
+    for logpath in path_to_log_list:
+        path_to_log = logpath.split(':')[0]
         if not os.path.exists(path_to_log):
             print 'Path does not exist: %s' % path_to_log
             exit()
