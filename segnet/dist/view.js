@@ -3647,8 +3647,8 @@ module.exports = [
 ]
 
 },{}],39:[function(require,module,exports){
-var _templateObject = _taggedTemplateLiteral(['\n  <div>\n  <ul>\n      <li class="header">\n        <div>Input Image</div>\n        <div>OSM "ground truth"</div>\n        <div>Net Prediction</div>\n      </li>\n      ', '\n  </ul>\n  ', '\n  </div>\n'], ['\n  <div>\n  <ul>\n      <li class="header">\n        <div>Input Image</div>\n        <div>OSM "ground truth"</div>\n        <div>Net Prediction</div>\n      </li>\n      ', '\n  </ul>\n  ', '\n  </div>\n']),
-    _templateObject2 = _taggedTemplateLiteral(['\n           <li data-tile=', '>\n               <img src=', ' onclick=', '></img>\n               <img src=', ' onclick=', '></img>\n               <img src=', ' onclick=', '></img>\n               <div>\n                Completeness: ', '\n                Correctness: ', '\n               </div>\n           </li>\n           '], ['\n           <li data-tile=', '>\n               <img src=', ' onclick=', '></img>\n               <img src=', ' onclick=', '></img>\n               <img src=', ' onclick=', '></img>\n               <div>\n                Completeness: ', '\n                Correctness: ', '\n               </div>\n           </li>\n           ']),
+var _templateObject = _taggedTemplateLiteral(['\n    <div>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  '], ['\n    <div>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  ']),
+    _templateObject2 = _taggedTemplateLiteral(['\n             <li data-tile=', '>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 <div>\n                  Completeness: ', '\n                  Correctness: ', '\n                 </div>\n             </li>\n             '], ['\n             <li data-tile=', '>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 <div>\n                  Completeness: ', '\n                  Correctness: ', '\n                 </div>\n             </li>\n             ']),
     _templateObject3 = _taggedTemplateLiteral(['<button onclick=', '>Load More</button>'], ['<button onclick=', '>Load More</button>']);
 
 function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
@@ -3685,7 +3685,7 @@ var app = choo();
 
 app.model({
   namespace: 'app',
-  state: { items: [], limit: 50 },
+  state: { items: [], limit: 50, sort: 'completeness_score:descending' },
   subscriptions: [function (send) {
     send('http:get_json');
   } // grab json data at startup
@@ -3696,7 +3696,10 @@ app.model({
     },
     'loadMore': logged(function (action, state) {
       return { limit: state.limit + 50 };
-    }, 'loadMore')
+    }, 'loadMore'),
+    'sort': function (action, state) {
+      return { sort: action.key };
+    }
   },
   effects: {
     'error': function (state, event) {
@@ -3716,7 +3719,23 @@ app.model({
 });
 
 var view = function (params, state, send) {
-  return choo.view(_templateObject, state.app.items.slice(0, state.app.limit).map(function (item) {
+  var sort = state.app.sort.split(':');
+  var items = state.app.items.filter(function (item) {
+    return item.metrics[sort[0]] >= 0;
+  }).sort(function (a, b) {
+    var diff = a.metrics[sort[0]] - b.metrics[sort[0]];
+    return sort[1] === 'ascending' ? diff : -diff;
+  });
+
+  return choo.view(_templateObject, function () {
+    return send('app:sort', { key: 'correctness_score:descending' });
+  }, function () {
+    return send('app:sort', { key: 'correctness_score:ascending' });
+  }, function () {
+    return send('app:sort', { key: 'completeness_score:descending' });
+  }, function () {
+    return send('app:sort', { key: 'completeness_score:ascending' });
+  }, items.slice(0, state.app.limit).map(function (item) {
     return choo.view(_templateObject2, getTile(item), getSatelliteTileURL(item), onClick, baseurl + item.groundtruth, onClick, baseurl + item.prediction, onClick, item.metrics.completeness_score.toFixed(3), item.metrics.correctness_score.toFixed(3));
   }), state.app.limit < state.app.items.length ? choo.view(_templateObject3, function () {
     return send('app:loadMore');
@@ -3794,6 +3813,9 @@ function getJson(state, action, send) {
     if (err) return send('app:error', { payload: err.message });
     if (res.statusCode !== 200 || !body) {
       return send('app:error', { payload: 'something went wrong' });
+    }
+    if (typeof body === 'string') {
+      body = JSON.parse(body.replace(/NaN/g, '-1'));
     }
     send('app:setTestOutput', { payload: body });
   });

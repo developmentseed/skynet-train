@@ -31,13 +31,14 @@ const app = choo()
 
 app.model({
   namespace: 'app',
-  state: { items: [], limit: 50 },
+  state: { items: [], limit: 50, sort: 'completeness_score:descending' },
   subscriptions: [
     function (send) { send('http:get_json') } // grab json data at startup
   ],
   reducers: {
     'setTestOutput': (action, state) => ({ items: action.payload }),
-    'loadMore': logged((action, state) => ({ limit: state.limit + 50 }), 'loadMore')
+    'loadMore': logged((action, state) => ({ limit: state.limit + 50 }), 'loadMore'),
+    'sort': (action, state) => ({ sort: action.key })
   },
   effects: {
     'error': (state, event) => console.error(`error: ${event.payload}`),
@@ -52,34 +53,50 @@ app.model({
   }
 })
 
-const view = (params, state, send) => choo.view`
-  <div>
-  <ul>
-      <li class="header">
-        <div>Input Image</div>
-        <div>OSM "ground truth"</div>
-        <div>Net Prediction</div>
-      </li>
-      ${state.app.items
-      .slice(0, state.app.limit)
-      .map(item => choo.view`
-           <li data-tile=${getTile(item)}>
-               <img src=${getSatelliteTileURL(item)} onclick=${onClick}></img>
-               <img src=${baseurl + item.groundtruth} onclick=${onClick}></img>
-               <img src=${baseurl + item.prediction} onclick=${onClick}></img>
-               <div>
-                Completeness: ${item.metrics.completeness_score.toFixed(3)}
-                Correctness: ${item.metrics.correctness_score.toFixed(3)}
-               </div>
-           </li>
-           `)
-  }
-  </ul>
-  ${state.app.limit < state.app.items.length
-    ? choo.view`<button onclick=${() => send('app:loadMore')}>Load More</button>`
-    : ''}
-  </div>
-`
+const view = (params, state, send) => {
+  const sort = state.app.sort.split(':')
+  const items = state.app.items
+  .filter(function (item) {
+    return item.metrics[sort[0]] >= 0
+  })
+  .sort(function (a, b) {
+    var diff = a.metrics[sort[0]] - b.metrics[sort[0]]
+    return sort[1] === 'ascending' ? diff : -diff
+  })
+
+  return choo.view`
+    <div>
+    <button onclick=${() => send('app:sort', { key: 'correctness_score:descending' })}>Most Correct</button>
+    <button onclick=${() => send('app:sort', { key: 'correctness_score:ascending' })}>Least Correct</button>
+    <button onclick=${() => send('app:sort', { key: 'completeness_score:descending' })}>Most Complete</button>
+    <button onclick=${() => send('app:sort', { key: 'completeness_score:ascending' })}>Least Complete</button>
+    <ul>
+        <li class="header">
+          <div>Input Image</div>
+          <div>OSM "ground truth"</div>
+          <div>Net Prediction</div>
+        </li>
+        ${items
+        .slice(0, state.app.limit)
+        .map(item => choo.view`
+             <li data-tile=${getTile(item)}>
+                 <img src=${getSatelliteTileURL(item)} onclick=${onClick}></img>
+                 <img src=${baseurl + item.groundtruth} onclick=${onClick}></img>
+                 <img src=${baseurl + item.prediction} onclick=${onClick}></img>
+                 <div>
+                  Completeness: ${item.metrics.completeness_score.toFixed(3)}
+                  Correctness: ${item.metrics.correctness_score.toFixed(3)}
+                 </div>
+             </li>
+             `)
+    }
+    </ul>
+    ${state.app.limit < state.app.items.length
+      ? choo.view`<button onclick=${() => send('app:loadMore')}>Load More</button>`
+      : ''}
+    </div>
+  `
+}
 
 app.router((route) => [
   route('/', logged(view, 'view'))
@@ -161,6 +178,9 @@ function getJson (state, action, send) {
     if (err) return send('app:error', { payload: err.message })
     if (res.statusCode !== 200 || !body) {
       return send('app:error', { payload:'something went wrong' })
+    }
+    if (typeof body === 'string') {
+      body = JSON.parse(body.replace(/NaN/g, '-1'))
     }
     send('app:setTestOutput', { payload: body })
   })
