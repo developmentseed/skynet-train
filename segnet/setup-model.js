@@ -32,7 +32,8 @@ renderModel('deploy', model, cw, output)
 // phase: 'train' or 'inference'
 // model: 'segnet' or 'segnet_basic'
 function renderModel (phase, model, classWeights, outputDir) {
-  var template = path.join(__dirname, 'templates', model + '_' + phase + '.prototxt')
+  var template = model + '_' + (phase === 'train' ? 'train' : 'inference') + '.prototxt'
+  template = path.join(__dirname, 'templates', template)
   var batch = phase === 'train' ? (model === 'segnet' ? 6 : 16) : 1
   var inputLayer = phase === 'deploy' ? `
   input: "data"
@@ -62,7 +63,8 @@ function renderModel (phase, model, classWeights, outputDir) {
       return classWeights.map(w => space + w).join('')
     })
 
-  var file = path.join(outputDir, path.basename(template))
+  var template = model + '_' + (phase === 'train' ? 'train' : 'inference') + '.prototxt'
+  var file = path.join(outputDir, model + '_' + phase + '.prototxt')
   fs.writeFileSync(file, tmpl)
 }
 
