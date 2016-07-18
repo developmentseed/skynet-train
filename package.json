@@ -4,7 +4,8 @@
   "description": "(Adapted from http://mi.eng.cam.ac.uk/projects/segnet/tutorial.html) ## Batch Normalization",
   "main": "class-weights.js",
   "scripts": {
-    "build-viewer": "browserify results-viewer/view.js > results-viewer/dist/view.js"
+    "build-viewer": "browserify results-viewer/view.js > results-viewer/dist/view.js",
+    "build-demo": "browserify segnet/demo.js > segnet/static/demo.js"
   },
   "keywords": [],
   "author": "Anand Thakker <vestibule@anandthakker.net> (http://anandthakker.net/)",

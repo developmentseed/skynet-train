@@ -1,6 +1,5 @@
 const qs = require('querystring')
 const http = require('choo/http')
-const choo = require('choo')
 const mapboxgl = require('mapbox-gl')
 const tilebelt = require('tilebelt')
 
@@ -11,8 +10,9 @@ mapboxgl.accessToken = query.access_token
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/satellite-v8',
-  center: [-74.50, 40],
-  zoom: 9
+  center: [-122.4, 47.6],
+  zoom: 11,
+  hash: true
 })
 .on('load', function () {
   map.addSource('tile', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
@@ -26,123 +26,21 @@ const map = new mapboxgl.Map({
     }
   })
 })
-
-const app = choo()
-
-app.model({
-  namespace: 'app',
-  state: { items: [], limit: 50, sort: 'completeness_score:descending' },
-  subscriptions: [
-    function (send) { send('http:get_json') } // grab json data at startup
-  ],
-  reducers: {
-    'setTestOutput': (action, state) => {
-      const items = action.payload
-      const metrics = items.reduce((memo, item) => ({
-        correct: memo.correct + sum(item.metrics.pixels_correct),
-        complete: memo.complete + sum(item.metrics.pixels_complete),
-        predicted_fg: memo.predicted_fg + sum(item.metrics.pixels_predicted.slice(0, -1)),
-        actual_fg: memo.actual_fg + sum(item.metrics.pixels_actual.slice(0, -1))
-      }), { correct: 0, complete: 0, predicted_fg: 0, actual_fg: 0 })
-      return { items: items, metrics: metrics }
-    },
-    'loadMore': logged((action, state) => ({ limit: state.limit + 50 }), 'loadMore'),
-    'sort': (action, state) => ({ sort: action.key })
-  },
-  effects: {
-    'error': (state, event) => console.error(`error: ${event.payload}`),
-    'print': (state, event) => console.log(`http: ${event.payload}`),
-  }
-})
-
-app.model({
-  namespace: 'http',
-  effects: {
-    'get_json': getJson
-  }
-})
-
-const view = (params, state, send) => {
-  const sort = state.app.sort.split(':')
-  const items = state.app.items
-  .filter(function (item) {
-    return item.metrics[sort[0]] >= 0
-  })
-  .sort(function (a, b) {
-    var diff = a.metrics[sort[0]] - b.metrics[sort[0]]
-    return sort[1] === 'ascending' ? diff : -diff
-  })
-
-  let correctness = 0
-  let completeness = 0
-  if (state.app.metrics) {
-    correctness = state.app.metrics.correct / state.app.metrics.predicted_fg
-    completeness = state.app.metrics.complete / state.app.metrics.actual_fg
-  }
+.on('click', onClick)
 
 
-  return choo.view`
-    <div>
-    <dl>
-      <dt>Total Correctness:</dt>
-      <dd>${correctness.toFixed(3)}</dd>
-      <dt>Total Completeness:</dt>
-      <dd>${completeness.toFixed(3)}</dd>
-    </dl>
-    <button onclick=${() => send('app:sort', { key: 'correctness_score:descending' })}>Most Correct</button>
-    <button onclick=${() => send('app:sort', { key: 'correctness_score:ascending' })}>Least Correct</button>
-    <button onclick=${() => send('app:sort', { key: 'completeness_score:descending' })}>Most Complete</button>
-    <button onclick=${() => send('app:sort', { key: 'completeness_score:ascending' })}>Least Complete</button>
-    <ul>
-        <li class="header">
-          <div>Input Image</div>
-          <div>OSM "ground truth"</div>
-          <div>Net Prediction</div>
-        </li>
-        ${items
-        .slice(0, state.app.limit)
-        .map(item => choo.view`
-             <li data-tile=${getTile(item)}>
-                 <img src=${getSatelliteTileURL(item)} onclick=${onClick}></img>
-                 <img src=${baseurl + item.groundtruth} onclick=${onClick}></img>
-                 <img src=${baseurl + item.prediction} onclick=${onClick}></img>
-                 <div>
-                  Completeness: ${item.metrics.completeness_score.toFixed(3)}
-                  Correctness: ${item.metrics.correctness_score.toFixed(3)}
-                 </div>
-             </li>
-             `)
-    }
-    </ul>
-    ${state.app.limit < state.app.items.length
-      ? choo.view`<button onclick=${() => send('app:loadMore')}>Load More</button>`
-      : ''}
-    </div>
-  `
-}
-
-app.router((route) => [
-  route('/', logged(view, 'view'))
-])
-
-document.querySelector('#app').appendChild(app.start())
-
-function getTile (item) {
-  var match = /(\d*)-(\d*)-(\d*).png/.exec(item.test_data)
-  return match.slice(1, 4)
-}
-function getSatelliteTileURL(item) {
-  var tile = getTile(item)
+function getSatelliteTileURL(tile) {
   return 'http://b.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png'
-    .replace('{z}', tile[0])
-    .replace('{x}', tile[1])
-    .replace('{y}', tile[2]) +
+    .replace('{z}', tile[2])
+    .replace('{x}', tile[0])
+    .replace('{y}', tile[1]) +
     '?access_token=' + query.access_token
 }
 
 function onClick (event) {
-  var tile = event.currentTarget.parentNode.dataset.tile.split(',').map(Number)
-  tile = [tile[1], tile[2], tile[0]]
+  var loc = event.lngLat
+  var tile = tilebelt.pointToTile(loc.lng, loc.lat, 17)
+  var bbox = tilebelt.tileToBBOX(tile)
   var [w, s, e, n] = tilebelt.tileToBBOX(tile)
   var z = +tile[2]
 
@@ -153,7 +51,6 @@ function onClick (event) {
     [w, s]
   ]
 
-  map.jumpTo({center: [ (w + e) / 2, (s + n) / 2 ], zoom: z - 1, speed: 2})
   map.getSource('tile').setData({
     type: 'Feature',
     properties: {},
@@ -163,11 +60,27 @@ function onClick (event) {
     }
   })
 
-  showOverlay(event.currentTarget.src, coordinates)
+
+
+  var inputImageURL = getSatelliteTileURL(tile)
+  http.get({ url: inputImageURL, responseType: 'arraybuffer' }, function (err, response, body) {
+    var blob = new Blob([body], {type: 'image/png'})
+    var fd = new window.FormData()
+    fd.append('image', blob)
+    http.post({
+      url: '/predict',
+      body: fd,
+      responseType: 'arraybuffer'
+    }, function (err, response, body) {
+      var blob = new Blob([body], {type: 'image/png'})
+      var outputUrl = URL.createObjectURL(blob)
+      map.jumpTo({center: [ (w + e) / 2, (s + n) / 2 ], zoom: z - 1, speed: 2})
+      showOverlay(outputUrl, coordinates)
+    })
+  })
 }
 
 function showOverlay (url, coords) {
-  console.log('show overlay', url, coords)
   if (map.getLayer('class-overlay')) {
     map.removeLayer('class-overlay')
   }
@@ -195,27 +108,3 @@ function showOverlay (url, coords) {
   }
 }
 
-function getJson (state, action, send) {
-  console.log('getJson', state, action)
-  http.get(baseurl + 'index.json', { json: true }, function (err, res, body) {
-    if (err) return send('app:error', { payload: err.message })
-    if (res.statusCode !== 200 || !body) {
-      return send('app:error', { payload:'something went wrong' })
-    }
-    if (typeof body === 'string') {
-      body = JSON.parse(body.replace(/NaN/g, '-1'))
-    }
-    send('app:setTestOutput', { payload: body })
-  })
-}
-
-function logged (view, tag) {
-  return function () {
-    console.log(tag || '', arguments)
-    return view.apply(this, Array.prototype.slice.call(arguments))
-  }
-}
-
-function sum (arr) {
-  return arr.reduce((memo, x) => memo + x, 0)
-}
