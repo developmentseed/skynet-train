@@ -51,7 +51,7 @@ spawnSync('python', [
   '--output', output
 ], { stdio: 'inherit' })
 
-fs.copySync(path.join(__dirname, 'dist'), output)
+fs.copySync(path.join(__dirname, '../results-viewer/dist'), output)
 
 console.log('Done!')
 
