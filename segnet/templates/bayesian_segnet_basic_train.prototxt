@@ -1,15 +1,5 @@
 name: "segnet"
-layer {
-  name: "data"
-  type: "DenseImageData"
-  top: "data"
-  top: "label"
-  dense_image_data_param {
-    source: "TRAINING_DATA"	 # Change this to the absolute path to your data file
-    batch_size: 16   			# Change this number to a batch size that will fit on your GPU
-    shuffle: true
-  }
-}
+INPUT
 layer {
   name: "norm"
   type: "LRN"

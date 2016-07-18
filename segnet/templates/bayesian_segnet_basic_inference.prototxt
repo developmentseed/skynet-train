@@ -1,14 +1,5 @@
 name: "segnet"
-layer {
-  name: "data"
-  type: "DenseImageData"
-  top: "data"
-  top: "label"
-  dense_image_data_param {
-    source: "TEST_DATA"	# Change this to the absolute path to your data file
-    batch_size: 8  # Change this to be the number of Monte Carlo Dropout samples you wish to make
-  }
-}
+INPUT
 layer {
   name: "norm"
   type: "LRN"

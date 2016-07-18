@@ -1,14 +1,5 @@
 name: "VGG_ILSVRC_16_layer"
-layer {
-  name: "data"
-  type: "DenseImageData"
-  top: "data"
-  top: "label"
-  dense_image_data_param {
-    source: "TEST_DATA"	# Change this to the absolute path to your data file
-    batch_size: 1
-  }
-}
+INPUT
 layer {
   bottom: "data"
   top: "conv1_1"
