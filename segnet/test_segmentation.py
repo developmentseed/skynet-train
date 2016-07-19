@@ -15,6 +15,8 @@ sys.path.insert(0, caffe_root + 'python')
 import caffe
 
 from metrics import complete_and_correct
+from inference import predict
+from inference import labels_to_image
 
 
 # Import arguments
@@ -23,6 +25,7 @@ parser.add_argument('--model', type=str, required=True)
 parser.add_argument('--weights', type=str, required=True)
 parser.add_argument('--output', type=str, required=True)
 parser.add_argument('--classes', type=str, required=True)
+parser.add_argument('--metrics-only', default=False, action='store_true')
 args = parser.parse_args()
 
 with open(args.classes) as classes:
@@ -43,87 +46,56 @@ net = caffe.Net(args.model,
                 args.weights,
                 caffe.TEST)
 
+pixels_correct = 0
+pixels_complete = 0
+pixels_predicted_fg = 0
+pixels_actual_fg = 0
 outputs = []
 
 for i in range(0, len(test_data)):
-
-    net.forward()
+    prediction_image = predict(net, colors)
 
     image = net.blobs['data'].data
-    label = net.blobs['label'].data
-    predicted = net.blobs['prob'].data
     image = np.squeeze(image[0, :, :, :])
-    output = np.squeeze(predicted[0, :, :, :])
+    label = net.blobs['label'].data
     label = np.squeeze(label)
+    predicted = net.blobs['prob'].data
+    predicted = np.squeeze(predicted[0, :, :, :])
 
-    metrics = complete_and_correct(output, label, 3, 0.5)
-    print(metrics)
+    metrics = complete_and_correct(predicted, label, 3, 0.5)
 
-    # only use the max-probability non-background class if its probability is
-    # above some threshold
-    ind = np.argmax(output, axis=0)
-    fg = output[:-1, :, :]  # foreground classes only
-    bg = np.full(ind.shape, num_classes - 1)
-    ind = np.where(np.max(fg, axis=0) > 0.5, ind, bg)
-
-    r = ind.copy()
-    g = ind.copy()
-    b = ind.copy()
-    a = np.zeros(ind.shape)
-    r_gt = label.copy()
-    g_gt = label.copy()
-    b_gt = label.copy()
-    a_gt = np.zeros(label.shape)
-
-    label_colours = np.array(colors)
-    for l in range(0, len(colors)):
-        r[ind == l] = label_colours[l, 0]
-        g[ind == l] = label_colours[l, 1]
-        b[ind == l] = label_colours[l, 2]
-        r_gt[label == l] = label_colours[l, 0]
-        g_gt[label == l] = label_colours[l, 1]
-        b_gt[label == l] = label_colours[l, 2]
-
-    max_prob = np.max(output, axis=0)
-    a[ind != num_classes - 1] = max_prob[ind != num_classes - 1] * 255
-    a_gt[label != num_classes - 1] = 255
-
-    rgb = np.zeros((ind.shape[0], ind.shape[1], 4))
-    rgb[:, :, 0] = r
-    rgb[:, :, 1] = g
-    rgb[:, :, 2] = b
-    rgb[:, :, 3] = a
-
-    rgb_gt = np.zeros((ind.shape[0], ind.shape[1], 4))
-    rgb_gt[:, :, 0] = r_gt
-    rgb_gt[:, :, 1] = g_gt
-    rgb_gt[:, :, 2] = b_gt
-    rgb_gt[:, :, 3] = a_gt
+    result = {'index': i, 'metrics': metrics}
+    print(result)
+    outputs.append(result)
+    pixels_correct += sum(metrics['pixels_correct'])
+    pixels_complete += sum(metrics['pixels_complete'])
+    pixels_predicted_fg += sum(metrics['pixels_predicted'][:-1])
+    pixels_actual_fg += sum(metrics['pixels_actual'][:-1])
+    if args.metrics_only:
+        continue
 
     image = np.transpose(image, (1, 2, 0))
-    output = np.transpose(output, (1, 2, 0))
     image = image[:, :, (2, 1, 0)]
 
     prediction = str(i) + '_prediction.png'
     input_image = str(i) + '_input.png'
     groundtruth = str(i) + '_groundtruth.png'
-    scipy.misc.toimage(rgb, cmin=0.0, cmax=255, mode='RGBA').save(
-        os.path.join(args.output, prediction))
+
+    prediction_image.save(os.path.join(args.output, prediction))
+    labels_to_image(label, colors).save(os.path.join(args.output, groundtruth))
     scipy.misc.toimage(image, cmin=0.0, cmax=255).save(
         os.path.join(args.output, input_image))
-    scipy.misc.toimage(rgb_gt, cmin=0.0, cmax=255, mode='RGBA').save(
-        os.path.join(args.output, groundtruth))
 
-    outputs.append({
-        'index': i,
-        'input': input_image,
-        'prediction': prediction,
-        'groundtruth': groundtruth,
-        'test_data': test_data[i],
-        'metrics': metrics
-    })
+    result['input'] = input_image
+    result['prediction'] = prediction
+    result['groundtruth'] = groundtruth
+    result['test_data'] = test_data[i]
 
 with open(os.path.join(args.output, 'index.json'), 'w') as outfile:
-    json.dump(outputs, outfile)
+    json.dump({
+        'correctness': pixels_correct / pixels_predicted_fg,
+        'completeness': pixels_complete / pixels_actual_fg,
+        'images': outputs
+    }, outfile)
 
 print 'Success!'
