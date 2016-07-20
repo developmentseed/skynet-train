@@ -5,9 +5,10 @@ import scipy
 def predict(net, label_colors, image=None):
     num_classes = len(label_colors)
 
-    if image:
+    if image is not None:
         image = image.transpose((2, 0, 1))
         net.blobs['data'].data[0] = image
+        print(image.shape)
 
     net.forward()
 
