@@ -1,3 +1,7 @@
+# https://github.com/BVLC/caffe/issues/861
+import matplotlib
+matplotlib.use('Agg')
+
 import os.path
 import sys
 from flask import Flask
