@@ -21,6 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, required=True)
 parser.add_argument('--weights', type=str, required=True)
 parser.add_argument('--classes', type=str, required=True)
+parser.add_argument('--cpu-mode', action='store_true', default=False)
 args = parser.parse_args()
 
 # read classes metadata
@@ -34,7 +35,11 @@ num_classes = len(colors)
 model = open(args.model, 'r').read()
 
 # create net
-caffe.set_mode_cpu()
+if args.cpu_mode:
+    caffe.set_mode_cpu()
+else:
+    caffe.set_mode_gpu()
+
 net = caffe.Net(args.model,
                 args.weights,
                 caffe.TEST)
@@ -57,4 +62,4 @@ def pred():
     return send_file(strio, mimetype='image/png')
 
 
-app.run()
+app.run(host='0.0.0.0')

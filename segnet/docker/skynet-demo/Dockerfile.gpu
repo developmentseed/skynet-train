@@ -1,0 +1,12 @@
+FROM developmentseed/caffe-segnet:gpu
+MAINTAINER anand@developmentseed.org
+
+RUN pip install flask
+
+ADD . /workspace
+
+EXPOSE 5000
+
+ENTRYPOINT ["python", "demo.py"]
+CMD ["--model", "/data/segnet_deploy.prototxt", "--weights", "/data/test_weights.caffemodel", "--classes", "/data/classes.json"]
+

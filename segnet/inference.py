@@ -1,5 +1,6 @@
 import numpy as np
 import scipy
+import time
 
 
 def predict(net, label_colors, image=None):
@@ -8,9 +9,10 @@ def predict(net, label_colors, image=None):
     if image is not None:
         image = image.transpose((2, 0, 1))
         net.blobs['data'].data[0] = image
-        print(image.shape)
 
+    start = time.time()
     net.forward()
+    print('Prediction time', time.time() - start)
 
     predicted = net.blobs['prob'].data
     output = np.squeeze(predicted[0, :, :, :])
