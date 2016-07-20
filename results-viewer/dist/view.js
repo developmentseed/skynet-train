@@ -3685,23 +3685,20 @@ var app = choo();
 
 app.model({
   namespace: 'app',
-  state: { items: [], limit: 50, sort: 'completeness_score:descending' },
+  state: { metrics: {}, items: [], limit: 50, sort: 'completeness_score:descending' },
   subscriptions: [function (send) {
     send('http:get_json');
   } // grab json data at startup
   ],
   reducers: {
     'setTestOutput': function (action, state) {
-      var items = action.payload;
-      var metrics = items.reduce(function (memo, item) {
-        return {
-          correct: memo.correct + sum(item.metrics.pixels_correct),
-          complete: memo.complete + sum(item.metrics.pixels_complete),
-          predicted_fg: memo.predicted_fg + sum(item.metrics.pixels_predicted.slice(0, -1)),
-          actual_fg: memo.actual_fg + sum(item.metrics.pixels_actual.slice(0, -1))
-        };
-      }, { correct: 0, complete: 0, predicted_fg: 0, actual_fg: 0 });
-      return { items: items, metrics: metrics };
+      return {
+        items: action.payload.images,
+        metrics: {
+          correctness: action.payload.correctness,
+          completeness: action.payload.completeness
+        }
+      };
     },
     'loadMore': logged(function (action, state) {
       return { limit: state.limit + 50 };
@@ -3738,9 +3735,9 @@ var view = function (params, state, send) {
 
   var correctness = 0;
   var completeness = 0;
-  if (state.app.metrics) {
-    correctness = state.app.metrics.correct / state.app.metrics.predicted_fg;
-    completeness = state.app.metrics.complete / state.app.metrics.actual_fg;
+  if (state.app.metrics.correctness) {
+    correctness = state.app.metrics.correctness;
+    completeness = state.app.metrics.completeness;
   }
 
   return choo.view(_templateObject, correctness.toFixed(3), completeness.toFixed(3), function () {
