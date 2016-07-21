@@ -35,27 +35,24 @@ function renderModel (phase, model, classWeights, outputDir) {
   var template = model + '_' + (phase === 'train' ? 'train' : 'inference') + '.prototxt'
   template = path.join(__dirname, 'templates', template)
   var batch = phase === 'train' ? (model === 'segnet' ? 6 : 16) : 1
-  var inputLayer = phase === 'deploy' ? `
-  input: "data"
-  input_shape: {
-    dim: 1
-    dim: 3
-    dim: 256
-    dim: 256
+  var inputLayer = phase === 'deploy' ? `input: "data"
+input_shape: {
+  dim: 1
+  dim: 3
+  dim: 256
+  dim: 256
+}` : `layer {
+  name: "data"
+  type: "DenseImageData"
+  top: "data"
+  top: "label"
+  dense_image_data_param {
+    source: "${phase === 'train' ? trainingData : testData}"
+    batch_size: ${batch}
+    shuffle: ${phase === 'train' ? 'true' : 'false'}
   }
-  `
-  : `
-  layer {
-    name: "data"
-    type: "DenseImageData"
-    top: "data"
-    top: "label"
-    dense_image_data_param {
-      source: "${phase === 'train' ? trainingData : testData}"
-      batch_size: ${batch}
-    }
-  }
-  `
+}`
+
   var tmpl = fs.readFileSync(template, 'utf-8')
     .replace(/INPUT/g, inputLayer)
     .replace(/CLASS_COUNT/g, classWeights.length)
