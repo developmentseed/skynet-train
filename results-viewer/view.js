@@ -80,6 +80,7 @@ const view = (params, state, send) => {
     completeness = state.app.metrics.completeness
   }
 
+  const imgStyle = query.compare ? 'width: 24%' : 'width: 32%'
 
   return choo.view`
     <div>
@@ -103,11 +104,11 @@ const view = (params, state, send) => {
         .slice(0, state.app.limit)
         .map(item => choo.view`
              <li data-tile=${getTile(item)}>
-                 <img src=${getSatelliteTileURL(item)} onclick=${onClick}></img>
-                 <img src=${baseurl + item.groundtruth} onclick=${onClick}></img>
-                 <img src=${baseurl + item.prediction} onclick=${onClick}></img>
+                 <img style=${imgStyle} src=${getSatelliteTileURL(item)} onclick=${onClick}></img>
+                 <img style=${imgStyle} src=${baseurl + item.groundtruth} onclick=${onClick}></img>
+                 <img style=${imgStyle} src=${baseurl + item.prediction} onclick=${onClick}></img>
                  ${query.compare ? choo.view`
-                   <img src=${url.resolve(baseurl, query.compare + '/' + item.prediction)} onclick=${onClick}></img>
+                   <img style=${imgStyle} src=${url.resolve(baseurl, query.compare + '/' + item.prediction)} onclick=${onClick}></img>
                    ` : ''}
                  <div>
                   Completeness: ${item.metrics.completeness_score.toFixed(3)}

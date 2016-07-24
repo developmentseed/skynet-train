@@ -4937,8 +4937,8 @@ module.exports = [
 
 },{}],42:[function(require,module,exports){
 var _templateObject = _taggedTemplateLiteral(['\n    <div>\n    <dl>\n      <dt>Total Correctness:</dt>\n      <dd>', '</dd>\n      <dt>Total Completeness:</dt>\n      <dd>', '</dd>\n    </dl>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  '], ['\n    <div>\n    <dl>\n      <dt>Total Correctness:</dt>\n      <dd>', '</dd>\n      <dt>Total Completeness:</dt>\n      <dd>', '</dd>\n    </dl>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  ']),
-    _templateObject2 = _taggedTemplateLiteral(['\n             <li data-tile=', '>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 ', '\n                 <div>\n                  Completeness: ', '\n                  Correctness: ', '\n                 </div>\n             </li>\n             '], ['\n             <li data-tile=', '>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 <img src=', ' onclick=', '></img>\n                 ', '\n                 <div>\n                  Completeness: ', '\n                  Correctness: ', '\n                 </div>\n             </li>\n             ']),
-    _templateObject3 = _taggedTemplateLiteral(['\n                   <img src=', ' onclick=', '></img>\n                   '], ['\n                   <img src=', ' onclick=', '></img>\n                   ']),
+    _templateObject2 = _taggedTemplateLiteral(['\n             <li data-tile=', '>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 ', '\n                 <div>\n                  Completeness: ', '\n                  Correctness: ', '\n                 </div>\n             </li>\n             '], ['\n             <li data-tile=', '>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 ', '\n                 <div>\n                  Completeness: ', '\n                  Correctness: ', '\n                 </div>\n             </li>\n             ']),
+    _templateObject3 = _taggedTemplateLiteral(['\n                   <img style=', ' src=', ' onclick=', '></img>\n                   '], ['\n                   <img style=', ' src=', ' onclick=', '></img>\n                   ']),
     _templateObject4 = _taggedTemplateLiteral(['<button onclick=', '>Load More</button>'], ['<button onclick=', '>Load More</button>']);
 
 function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
@@ -5031,6 +5031,8 @@ var view = function (params, state, send) {
     completeness = state.app.metrics.completeness;
   }
 
+  var imgStyle = query.compare ? 'width: 24%' : 'width: 32%';
+
   return choo.view(_templateObject, correctness.toFixed(3), completeness.toFixed(3), function () {
     return send('app:sort', { key: 'correctness_score:descending' });
   }, function () {
@@ -5040,7 +5042,7 @@ var view = function (params, state, send) {
   }, function () {
     return send('app:sort', { key: 'completeness_score:ascending' });
   }, items.slice(0, state.app.limit).map(function (item) {
-    return choo.view(_templateObject2, getTile(item), getSatelliteTileURL(item), onClick, baseurl + item.groundtruth, onClick, baseurl + item.prediction, onClick, query.compare ? choo.view(_templateObject3, url.resolve(baseurl, query.compare + '/' + item.prediction), onClick) : '', item.metrics.completeness_score.toFixed(3), item.metrics.correctness_score.toFixed(3));
+    return choo.view(_templateObject2, getTile(item), imgStyle, getSatelliteTileURL(item), onClick, imgStyle, baseurl + item.groundtruth, onClick, imgStyle, baseurl + item.prediction, onClick, query.compare ? choo.view(_templateObject3, imgStyle, url.resolve(baseurl, query.compare + '/' + item.prediction), onClick) : '', item.metrics.completeness_score.toFixed(3), item.metrics.correctness_score.toFixed(3));
   }), state.app.limit < state.app.items.length ? choo.view(_templateObject4, function () {
     return send('app:loadMore');
   }) : '');
