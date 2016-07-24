@@ -1,4 +1,5 @@
 const qs = require('querystring')
+const url = require('url')
 const http = require('choo/http')
 const choo = require('choo')
 const mapboxgl = require('mapbox-gl')
@@ -105,6 +106,9 @@ const view = (params, state, send) => {
                  <img src=${getSatelliteTileURL(item)} onclick=${onClick}></img>
                  <img src=${baseurl + item.groundtruth} onclick=${onClick}></img>
                  <img src=${baseurl + item.prediction} onclick=${onClick}></img>
+                 ${query.compare ? choo.view`
+                   <img src=${url.resolve(baseurl, query.compare + '/' + item.prediction)} onclick=${onClick}></img>
+                   ` : ''}
                  <div>
                   Completeness: ${item.metrics.completeness_score.toFixed(3)}
                   Correctness: ${item.metrics.correctness_score.toFixed(3)}
