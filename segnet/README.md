@@ -1,26 +1,63 @@
 
-# Testing the Trained Network
+# SegNet training and testing scripts
 
-(Adapted from http://mi.eng.cam.ac.uk/projects/segnet/tutorial.html)
-## Batch Normalization
+These scripts are for use in training and testing the [SegNet neural
+network](http://mi.eng.cam.ac.uk/projects/segnet/).  Contributions are very
+welcome!
 
-The Batch Normalisation layers [3] in SegNet shift the input feature maps
-according to their mean and variance statistics for each mini batch during
-training. At test time we must use the statistics for the entire dataset. To do
-this run the script Scripts/compute_bn_statistics.py using the following
-commands. Make sure you change the training weight file to the one which you
-wish to use.
+Prerequisites / Dependencies:
+ - Node and Python
+ - As of now, training SegNet requires building the [caffe-segnet fork](https://github.com/alexgkendall/caffe-segnet) fork of Caffe.
+ - Install node dependencies by running `npm install` in the root directory of this repo.
 
-```sh
-python compute_bn_statistics.py train.prototxt weights.caffemodel /path/to/weights/output
+## Set up model definition
+
+After creating a dataset with the [skynet-data](https://github.com/developmentseed/skynet-data)
+scripts, set up the model `prototxt` definition files by running:
+
+```
+node segnet/setup-model.js --data /path/to/dataset/ --output /path/to/training/workdir
 ```
 
-The script saves the final test weights in the output directory as test_weights.caffemodel
+Also copy `segnet/templates/solver.prototxt` to the training work directory, and
+edit it to (a) point to the right paths, and (b) set up the learning
+"hyperparameters".
 
-## Test Outputs
-`test_segmentation_camvid.py` will display the input image, ground truth and
-segmentation prediction for each test image.
+(NOTE: this is hard to get right at first; when we post links to a couple of
+pre-trained models, we'll also include a copy of the solver.prototxt we used as
+a reference / starting point.)
 
-```sh
-python test_segmentation_camvid.py --model inference.prototxt --weights /path/to/weights/output/test_weights.caffemodel --output /path/to/results/output/
+
+## Train
+
+Download the pre-trained VGG weights `VGG_ILSVRC_16_layers.caffemodel` from
+http://www.robots.ox.ac.uk/~vgg/research/very_deep/
+
+From your training work directory, run
+
 ```
+$CAFFE_ROOT/build/tools/caffe train -gpu 0 -solver solver.txt \
+    -weights VGG_ILSVRC_16_layers.caffemodel \
+    2>&1 | tee train.log
+```
+
+You can monitor the training with:
+
+```
+segnet/util/plot_training_log.py train.log --watch
+```
+
+This will generate and continually update a plot of the "loss" (i.e., training
+error) which should gradually decrease as training progresses.
+
+## Testing the Trained Network
+
+```
+segnet/run_test --output /path/for/test/results/ --train /path/to/segnet_train.prototxt --weights /path/to/snapshots/segnet_blahblah_iter_XXXXX.caffemodel --classes /path/to/dataset/classes.json
+```
+
+This script essentially carries out the instructions outlined here:
+http://mi.eng.cam.ac.uk/projects/segnet/tutorial.html
+
+
+

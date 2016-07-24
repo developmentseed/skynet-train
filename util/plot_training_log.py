@@ -211,7 +211,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=str)
     parser.add_argument('--type', type=int, default=7)
     parser.add_argument('--smooth', type=int, default=50)
-    parser.add_argument('--watch', type=bool, default=False)
+    parser.add_argument('--watch', action='store_true', default=False)
     args = parser.parse_args()
     chart_type = args.type
     if not is_valid_chart_type(chart_type):
