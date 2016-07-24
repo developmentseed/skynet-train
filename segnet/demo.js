@@ -9,7 +9,7 @@ const baseurl = query.baseurl || ''
 mapboxgl.accessToken = query.access_token
 const map = new mapboxgl.Map({
   container: 'map',
-  style: 'mapbox://styles/mapbox/satellite-v8',
+  style: 'mapbox://styles/mapbox/satellite-streets-v9',
   center: [-122.4, 47.6],
   zoom: 11,
   hash: true
