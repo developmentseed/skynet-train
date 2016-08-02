@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+
+var spawn = require('child_process').spawn
+var argv = require('minimist')(process.argv.slice(2), {
+  alias: {
+    r: 'region',
+    i: 'ssh-keypath',
+    t: 'instance-type',
+    iam: 'iam-role'
+  },
+  default: {
+    region: 'us-east-1',
+    'instance-type': 'g2.2xlarge',
+    'iam-role': null
+  }
+})
+
+if (!argv['ssh-keypath'] || argv._.length !== 1) {
+  console.log('Usage: ' + process.argv[1] + ' --ssh-keypath /path/to/private/key [--instance-type g2.2xlarge] [--region us-east-1] [--iam-role IAM_role] machine_name')
+  process.exit(1)
+}
+
+var name = argv._[0]
+
+var args = [
+  'create',
+  '--driver', 'amazonec2',
+  '--amazonec2-region', argv.region,
+  '--amazonec2-tags', 'Project,skynet',
+  '--amazonec2-instance-type', argv['instance-type'],
+  '--amazonec2-ssh-keypath', argv['ssh-keypath'],
+]
+
+if (argv['iam-role']) {
+  args.push('--amazonec2-iam-instance-profile', argv['iam-role'])
+}
+
+args.push(name)
+
+console.log('Creating ' + argv['instance-type'] + ' instance.')
+spawn('docker-machine', args, {stdio: 'inherit'})
+.on('exit', function (code) {
+  if (code && code !== 0) {
+    process.exit(code)
+  }
+
+  console.log('Installing NVIDIA drivers and nvidia-docker on instance.')
+
+  var command = [
+    // from https://github.com/NVIDIA/nvidia-docker/wiki/Deploy-on-Amazon-EC2
+    // Install NVIDIA drivers 361.42
+    'sudo apt-get install --no-install-recommends -y gcc make libc-dev',
+    'wget -P /tmp http://us.download.nvidia.com/XFree86/Linux-x86_64/361.42/NVIDIA-Linux-x86_64-361.42.run',
+    'sudo sh /tmp/NVIDIA-Linux-x86_64-361.42.run --silent',
+    // Install nvidia-docker and nvidia-docker-plugin
+    'wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.0-rc.3/nvidia-docker_1.0.0.rc.3-1_amd64.deb',
+    'sudo dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb',
+  ].join(' && ')
+  spawn('docker-machine', ['ssh', name, command], {stdio: 'inherit'})
+  .on('exit', function (code) {
+    if (!code) { console.log('Success!') }
+    process.exit(code)
+  })
+})
