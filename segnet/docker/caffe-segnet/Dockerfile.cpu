@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV CAFFE_ROOT=/opt/caffe
 WORKDIR $CAFFE_ROOT
 
-RUN git clone --depth 1 https://github.com/alexgkendall/caffe-segnet . && \
+RUN git clone -b segnet-multi-gpu --depth=1 https://github.com/developmentseed/caffe . && \
     for req in $(cat python/requirements.txt) pydot; do pip install $req; done && \
     mkdir build && cd build && \
     cmake -DCPU_ONLY=1 .. && \
