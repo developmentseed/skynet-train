@@ -15,7 +15,7 @@ var argv = require('minimist')(process.argv.slice(2), {
 var computeStats = path.join(__dirname, 'compute_bn_statistics.py')
 var runTest = path.join(__dirname, 'test_segmentation.py')
 
-if (!argv.train || !argv.weights || !argv.classes || !argv.output) {
+if (!argv.train || !argv.weights || !argv.classes) {
   console.error('Usage: ' + process.argv.slice(0, 2).join(' ') + ' --train train.prototxt --weights weights.caffemodel --classes class-defs.json --output /path/to/results/output')
   console.log(argv)
   process.exit(1)
@@ -24,14 +24,19 @@ if (!argv.train || !argv.weights || !argv.classes || !argv.output) {
 var train = path.resolve(argv.train)
 var weights = path.resolve(argv.weights)
 var classes = path.resolve(argv.classes)
+if (argv.output) {
+  argv.output = weights.replace('.caffemodel', '.results')
+}
 var output = path.resolve(argv.output)
+if (!fs.existsSync(output)) {
+  fs.mkdirSync(output)
+}
 
 // guess the inference.prototxt filename
 var inference = argv.inference || train.replace('train', 'inference')
 
 // dir for outputting the BN-stats-infused weights
 var inferenceDir = weights.replace('.caffemodel', '.inference')
-
 fs.mkdirSync(inferenceDir)
 
 console.log('Computing batch normalization stats.')

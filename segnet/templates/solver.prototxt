@@ -1,15 +1,15 @@
-net: "TRAIN_NET"	# Change this to the absolute path to your model file
+net: "TRAIN_NET"
 test_initialization: false
-test_iter: 7
+test_iter: 1
 test_interval: 1000000
-base_lr: 0.03
+base_lr: BASE_LR
 lr_policy: "step"
-gamma: 1.0
-stepsize: 10000000
+gamma: GAMMA
+stepsize: STEPSIZE
 weight_decay: 0.0005
 momentum: 0.9
-display: 20
-max_iter: 10000
-snapshot: 1000
+display: 50
+max_iter: MAX_ITER
+snapshot: SNAPSHOT_FREQUENCY
 snapshot_prefix: "SNAPSHOT_PREFIX"
 solver_mode: GPU
