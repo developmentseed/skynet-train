@@ -1,6 +1,13 @@
 import os
+import re
 import boto3
 from datetime import datetime
+
+
+def parse_s3_uri(uri):
+    match = re.match('s3://([^/]+)/(.*)', uri)
+    assert match is not None
+    return (match.group(1), match.group(2))
 
 
 def get_client(bucket):
@@ -13,7 +20,7 @@ def get_client(bucket):
 
 # based on http://stackoverflow.com/a/33350380
 def download_dir(prefix, local='/tmp', bucket='your_bucket', client=None, base=None):
-    print('downloading %s from %s to %s' % (prefix, bucket, local))
+    print('Downloading %s from %s to %s' % (prefix, bucket, local))
     if client is None:
         client = get_client(bucket)
     if base is None:
@@ -29,7 +36,6 @@ def download_dir(prefix, local='/tmp', bucket='your_bucket', client=None, base=N
                 download_path = os.path.join(local, relative_path)
                 if not os.path.exists(os.path.dirname(download_path)):
                     os.makedirs(os.path.dirname(download_path))
-                print('downloading %s to %s' % (file.get('Key'), download_path))
                 client.download_file(bucket, file.get('Key'), download_path)
 
 
