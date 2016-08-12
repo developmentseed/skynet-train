@@ -33,7 +33,7 @@ if (!fs.existsSync(output)) {
 }
 
 // guess the inference.prototxt filename
-var inference = argv.inference || train.replace('train', 'inference')
+var inference = argv.inference || train.replace('_train.prototxt', '_inference.prototxt')
 
 // dir for outputting the BN-stats-infused weights
 var inferenceDir = weights.replace('.caffemodel', '.inference')
