@@ -1,0 +1,12 @@
+FROM developmentseed/caffe-segnet:gpu
+MAINTAINER anand@developmentseed.org
+
+RUN pip install boto3
+
+ADD . /workspace
+
+# Expose demo server port
+EXPOSE 5000
+
+ENTRYPOINT ["segnet/train"]
+
