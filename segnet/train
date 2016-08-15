@@ -1,0 +1,199 @@
+#!/usr/bin/env python
+
+import os
+import re
+import math
+import glob
+import argparse
+import subprocess
+from google.protobuf import text_format
+import sync
+
+caffe_root = os.getenv('CAFFE_ROOT', '/home/ubuntu/caffe-segnet/')
+import sys  # nopep8
+sys.path.insert(0, caffe_root + 'python')
+from caffe.proto import caffe_pb2  # nopep8
+
+caffe_binary = os.path.join(caffe_root, 'build/tools/caffe')
+scripts = os.path.dirname(os.path.realpath(__file__))
+setup_model = os.path.join(scripts, 'setup-model')
+run_test = os.path.join(scripts, 'run-test')
+plot_log = os.path.normpath(os.path.join(scripts, '../util/plot_training_log.py'))
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--model', type=str, required=True)
+parser.add_argument('--output', type=str, required=True)
+parser.add_argument('--data', type=str, required=True)
+parser.add_argument('--fetch-data', type=str)
+parser.add_argument('--snapshot', type=int, default=10000)
+parser.add_argument('--iterations', type=int, default=100000)
+parser.add_argument('--cpu', action='store_true')
+parser.add_argument('--gpu', type=int, nargs='*', default=[0])
+parser.add_argument('--batch-size', type=int)
+parser.add_argument('--display-frequency', type=int, default=100)
+parser.add_argument('--sync', type=str)
+args = parser.parse_args()
+
+snapshot_dir = os.path.join(args.output, 'snapshots')
+snapshot_prefix = os.path.join(snapshot_dir, args.model)
+
+# hacky and brittle!
+solver_types = caffe_pb2.SolverParameter.SolverType.DESCRIPTOR.values_by_name
+
+
+def setup_solver(train_net_path, epoch, previous_solver=None, **kwargs):
+    defaults = {
+        'solver_type': 'SGD',
+        'iter_size': 1,
+        'max_iter': 100000,
+        'base_lr': 0.01,
+        'lr_policy': 'step',
+        'gamma': 0.25,
+        'stepsize': 30 * epoch,
+        'momentum': 0.9,
+        'weight_decay': 0.0005,
+        'display': args.display_frequency,
+        'snapshot': 10000,
+        'snapshot_prefix': snapshot_prefix,
+        'solver_mode': caffe_pb2.SolverParameter.GPU
+    }
+    s = caffe_pb2.SolverParameter()
+    if previous_solver:
+        previous_solver = open(previous_solver, 'r').read()
+        text_format.Merge(previous_solver, s)
+        for key, value in kwargs.iteritems():
+            if key == 'solver_type':
+                value = solver_types[value].number
+            setattr(s, key, value)
+    else:
+        for key, default_value in defaults.iteritems():
+            value = kwargs.get(key, default_value)
+            if key == 'solver_type':
+                value = solver_types[value].number
+            setattr(s, key, value)
+    s.train_net = train_net_path
+    return str(s)
+
+
+def snapshot_run(starting_snapshot_iteration, snapshot_iterations):
+    train_args = [caffe_binary, 'train']
+    if starting_snapshot_iteration > 0:
+        train_args.append('-snapshot')
+        train_args.append('%s_iter_%s.solverstate' % (snapshot_prefix, starting_snapshot_iteration))
+
+    # Set up solver_START-END.prototxt file
+    previous_solver = None
+    if starting_snapshot_iteration > 0:
+        solvers = glob.glob(os.path.join(args.output, 'solver*-%s.prototxt' % starting_snapshot_iteration))
+        assert len(solvers) > 0, "Could not find previous solver prototxt for iteration %s" % starting_snapshot_iteration
+        previous_solver = solvers[0]
+
+    max_iterations = snapshot_iterations * (1 + starting_snapshot_iteration / snapshot_iterations)
+    assert max_iterations % snapshot_iterations == 0
+    epoch = int(math.ceil(float(train_size) / batch_size))
+    solver = setup_solver(train_net_path, epoch, previous_solver,
+                          max_iter=max_iterations,
+                          snapshot=snapshot_iterations)
+    solver_file = 'solver_%s-%s.prototxt' % (starting_snapshot_iteration, max_iterations)
+    solver_path = os.path.join(args.output, solver_file)
+    with open(solver_path, 'w') as f:
+        f.write(str(solver))
+
+    train_args.append('-solver')
+    train_args.append(solver_path)
+
+    if not args.cpu:
+        train_args.append('-gpu')
+        train_args.append(','.join(map(str, args.gpu)))
+
+    logfile = 'train_%s-%s.log' % (starting_snapshot_iteration, max_iterations)
+    logfile = os.path.join(args.output, logfile)
+    print('Training: %s' % ' '.join(train_args))
+    with open(logfile, 'w') as f:
+        exitcode = subprocess.call(train_args, stdout=f, stderr=subprocess.STDOUT)
+
+    if exitcode != 0:
+        print(open(logfile, 'r').read())
+        sys.exit(exitcode)
+
+    print('Finished training to snapshot iteration %s' % max_iterations)
+    return snapshot_prefix + '_iter_' + str(max_iterations) + '.caffemodel'
+
+
+def test_run(snapshot, iteration):
+    logfile = 'test_%s.log' % iteration
+    logfile = os.path.join(args.output, logfile)
+    test_args = [run_test,
+                 '--output', snapshot.replace('caffemodel', 'results'),
+                 '--train', train_net_path,
+                 '--weights', snapshot,
+                 '--classes', os.path.join(args.data, 'classes.json')]
+    print('Testing: %s' % ' '.join(test_args))
+    with open(logfile, 'w') as f:
+        exitcode = subprocess.call(test_args, stdout=f, stderr=subprocess.STDOUT)
+
+    if exitcode != 0:
+        print(open(logfile, 'r').read())
+        sys.exit(exitcode)
+
+
+# Fetch training data if it doesn't exist
+if not os.path.exists(args.data):
+    if not args.fetch_data:
+        raise 'No data at % and --fetch-data is not set.'
+    (data_bucket, data_prefix) = sync.parse_s3_uri(args.fetch_data)
+    sync.download_dir(data_prefix, local=args.data, bucket=data_bucket)
+
+
+# Create the network prototxt files
+if not os.path.exists(os.path.join(args.output, args.model + '_train.prototxt')):
+    setup_model_cmd = [setup_model,
+                       '--model', args.model,
+                       '--data', args.data,
+                       '--output', args.output,
+                       ]
+    if args.batch_size:
+        setup_model_cmd.append('--batch-size')
+        setup_model_cmd.append(str(args.batch_size))
+    print('Set up model: %s' % ' '.join(setup_model_cmd))
+    subprocess.call(setup_model_cmd)
+
+# determine the size of the training set and the batch size
+train_net_path = os.path.join(args.output, args.model + '_train.prototxt')
+test_net_path = os.path.join(args.output, args.model + '_inference.prototxt')
+with open(train_net_path, 'r') as f:
+    batch_size = re.search('batch_size:\s*(\d+)', f.read())
+    batch_size = int(batch_size.group(1))
+train_size = sum(1 for line in open(os.path.join(args.data, 'train.txt')))
+
+
+# Determine which, if any, snapshot we're starting from
+if os.path.isdir(snapshot_dir):
+    # If there are snapshots, grab the latest one.
+    snaps = glob.glob(os.path.join(snapshot_dir, args.model + '*.solverstate'))
+    snaps = map(lambda s: re.search('(\d+)\.solverstate', s), snaps)
+    snaps = map(lambda m: int(m.group(1)), filter(lambda m: m, snaps))
+    snaps.sort()
+    current_iteration = snaps[-1]
+else:
+    os.mkdir(snapshot_dir)
+    current_iteration = 0
+
+
+# Look for a snapshot
+if args.sync:
+    (bucket, prefix) = sync.parse_s3_uri(args.sync)
+    sync.download_dir(prefix, local=args.output, bucket=bucket)
+
+# Run the training/testing loop
+assert args.snapshot > 0
+while current_iteration < args.iterations:
+    snapshot = snapshot_run(current_iteration, args.snapshot)
+    logs_to_plot = glob.glob(os.path.join(args.output, 'train*.log'))
+    logs_to_plot = map(lambda p: os.path.relpath(p, args.output), logs_to_plot)
+    subprocess.call([plot_log] + logs_to_plot, cwd=args.output)
+    current_iteration += args.snapshot
+    if args.sync:
+        print('Syncing back to s3://%s/%s' % (bucket, prefix))
+        sync.upload_dir(args.output, prefix, bucket)
+    test_run(snapshot, current_iteration)
