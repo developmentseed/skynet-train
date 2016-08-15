@@ -6,7 +6,9 @@ RUN curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
     sudo apt-get install -y nodejs build-essential
 
 RUN pip install boto3 && \
-    pip install protobuf
+    pip install protobuf && \
+    pip install cython && \
+    pip install scikit-image
 
 ADD package.json /workspace/package.json
 RUN npm install
