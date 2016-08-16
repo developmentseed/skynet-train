@@ -23,10 +23,10 @@ nvidia-docker.)
 
 ```sh
 nvidia-docker -v /path/to/training/dataset:/data \
-    -v /path/to/workspace:/workspace \
+    -v /path/to/training/output:/training \
     -e AWS_ACCESS_KEY_ID=... \
     -e AWS_SECRET_ACCESS_KEY=... \
-    developmentseed/skynet-train:gpu --model segnet --output /workspace --data /data --sync s3://your-bucket/training/blahbla
+    developmentseed/skynet-train:gpu --model segnet --output /training --data /data --sync s3://your-bucket/training/blahbla
 ```
 
 This will kick off a training run with the given data. Every 10000 iterations,
