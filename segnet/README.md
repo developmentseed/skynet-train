@@ -34,6 +34,13 @@ the model will be snapshotted and run on the test data, the training "loss"
 will be plotted, and all of this uploaded to s3. (Omit the `--sync` argument
 and AWS creds to skip the upload.)
 
+Each batch of test results includes a `view.html` file that shows a bare-bones
+viewer allowing you to browse the results on a map and compare model outputs to
+the ground truth data.  Use it like:
+ - http://your-bucket-url/...test-dir.../view.html?imagery_source=MAPID&access_token=MAPBOX_ACCESS_TOKEN where `MAPID` points to Mapbox-hosted raster tiles used for training. (Defaults to `mapbox.satellite`.)
+ - http://your-bucket-url/...test-dir.../view.html?imagery_source=http://yourtiles.com/{z}/{x}/{y} for non-Mapbox imagery tiles
+
+
 Customize the training run with these params:
 
 ```

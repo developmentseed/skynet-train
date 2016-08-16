@@ -2,19 +2,14 @@ const qs = require('querystring')
 const url = require('url')
 const http = require('choo/http')
 const choo = require('choo')
-const mapboxgl = require('mapbox-gl')
 const tilebelt = require('tilebelt')
+const createMap = require('./map')
+const getSatelliteTileURL = require('./get-tile-url')
 
 const query = qs.parse(window.location.search.substring(1))
 const baseurl = query.baseurl || ''
 
-mapboxgl.accessToken = query.access_token
-const map = new mapboxgl.Map({
-  container: 'map',
-  style: 'mapbox://styles/mapbox/satellite-v8',
-  center: [-74.50, 40],
-  zoom: 9
-})
+let map = createMap(query)
 .on('load', function () {
   map.addSource('tile', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
   map.addLayer({
@@ -41,8 +36,8 @@ app.model({
       return {
         items: action.payload.images,
         metrics: {
-            correctness: action.payload.correctness,
-            completeness: action.payload.completeness
+          correctness: action.payload.correctness,
+          completeness: action.payload.completeness
         }
       }
     },
@@ -51,7 +46,7 @@ app.model({
   },
   effects: {
     'error': (state, event) => console.error(`error: ${event.payload}`),
-    'print': (state, event) => console.log(`http: ${event.payload}`),
+    'print': (state, event) => console.log(`http: ${event.payload}`)
   }
 })
 
@@ -102,9 +97,12 @@ const view = (params, state, send) => {
         </li>
         ${items
         .slice(0, state.app.limit)
-        .map(item => choo.view`
+        .map(item => {
+          var tile = getTile(item)
+          var image = getSatelliteTileURL(query, tile[0], tile[1], tile[2])
+          return choo.view`
              <li data-tile=${getTile(item)}>
-                 <img style=${imgStyle} src=${getSatelliteTileURL(item)} onclick=${onClick}></img>
+                 <img style=${imgStyle} src=${image} onclick=${onClick}></img>
                  <img style=${imgStyle} src=${baseurl + item.groundtruth} onclick=${onClick}></img>
                  <img style=${imgStyle} src=${baseurl + item.prediction} onclick=${onClick}></img>
                  ${query.compare ? choo.view`
@@ -115,7 +113,8 @@ const view = (params, state, send) => {
                   Correctness: ${item.metrics.correctness_score.toFixed(3)}
                  </div>
              </li>
-             `)
+             `
+        })
     }
     </ul>
     ${state.app.limit < state.app.items.length
@@ -134,14 +133,6 @@ document.querySelector('#app').appendChild(app.start())
 function getTile (item) {
   var match = /(\d*)-(\d*)-(\d*).png/.exec(item.test_data)
   return match.slice(1, 4)
-}
-function getSatelliteTileURL(item) {
-  var tile = getTile(item)
-  return 'http://b.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png'
-    .replace('{z}', tile[0])
-    .replace('{x}', tile[1])
-    .replace('{y}', tile[2]) +
-    '?access_token=' + query.access_token
 }
 
 function onClick (event) {
@@ -163,7 +154,7 @@ function onClick (event) {
     properties: {},
     geometry: {
       type: 'Polygon',
-      coordinates: [ coordinates.concat([[w,n]]) ]
+      coordinates: [ coordinates.concat([[w, n]]) ]
     }
   })
 
@@ -204,7 +195,7 @@ function getJson (state, action, send) {
   http.get(baseurl + 'index.json', { json: true }, function (err, res, body) {
     if (err) return send('app:error', { payload: err.message })
     if (res.statusCode !== 200 || !body) {
-      return send('app:error', { payload:'something went wrong' })
+      return send('app:error', { payload: 'something went wrong' })
     }
     if (typeof body === 'string') {
       body = JSON.parse(body.replace(/NaN/g, '-1'))
@@ -220,6 +211,3 @@ function logged (view, tag) {
   }
 }
 
-function sum (arr) {
-  return arr.reduce((memo, x) => memo + x, 0)
-}
