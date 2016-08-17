@@ -10,6 +10,8 @@ RUN pip install boto3 && \
     pip install cython && \
     pip install scikit-image
 
+RUN pip install awscli
+
 ADD package.json /workspace/package.json
 RUN npm install
 

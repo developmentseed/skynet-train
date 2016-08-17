@@ -7,7 +7,6 @@ import glob
 import argparse
 import subprocess
 from google.protobuf import text_format
-import sync
 
 caffe_root = os.getenv('CAFFE_ROOT', '/home/ubuntu/caffe-segnet/')
 import sys  # nopep8
@@ -141,8 +140,7 @@ def test_run(snapshot, iteration):
 if not os.path.exists(args.data):
     if not args.fetch_data:
         raise 'No data at % and --fetch-data is not set.'
-    (data_bucket, data_prefix) = sync.parse_s3_uri(args.fetch_data)
-    sync.download_dir(data_prefix, local=args.data, bucket=data_bucket)
+    subprocess.call(['aws', 's3', 'sync', args.fetch_data, args.data])
 
 
 # Create the network prototxt files
@@ -182,8 +180,7 @@ else:
 
 # Look for a snapshot
 if args.sync:
-    (bucket, prefix) = sync.parse_s3_uri(args.sync)
-    sync.download_dir(prefix, local=args.output, bucket=bucket)
+    subprocess.call(['aws', 's3', 'sync', args.sync, args.output])
 
 # Run the training/testing loop
 assert args.snapshot > 0
@@ -193,7 +190,7 @@ while current_iteration < args.iterations:
     logs_to_plot = map(lambda p: os.path.relpath(p, args.output), logs_to_plot)
     subprocess.call([plot_log] + logs_to_plot, cwd=args.output)
     current_iteration += args.snapshot
-    if args.sync:
-        print('Syncing back to s3://%s/%s' % (bucket, prefix))
-        sync.upload_dir(args.output, prefix, bucket)
     test_run(snapshot, current_iteration)
+    if args.sync:
+        print('Syncing back to %s' % args.sync)
+        subprocess.call(['aws', 's3', 'sync', args.output, args.sync])
