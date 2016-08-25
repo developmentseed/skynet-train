@@ -29,6 +29,7 @@ parser.add_argument('--iterations', type=int, default=100000)
 parser.add_argument('--cpu', action='store_true')
 parser.add_argument('--gpu', type=int, nargs='*', default=[0])
 parser.add_argument('--batch-size', type=int)
+parser.add_argument('--crop-size', type=int)
 parser.add_argument('--display-frequency', type=int, default=100)
 parser.add_argument('--sync', type=str)
 args = parser.parse_args()
@@ -153,6 +154,9 @@ if not os.path.exists(os.path.join(args.output, args.model + '_train.prototxt'))
     if args.batch_size:
         setup_model_cmd.append('--batch-size')
         setup_model_cmd.append(str(args.batch_size))
+    if args.crop_size:
+        setup_model_cmd.append('--crop')
+        setup_model_cmd.append(str(args.crop_size))
     print('Set up model: %s' % ' '.join(setup_model_cmd))
     subprocess.call(setup_model_cmd)
 
