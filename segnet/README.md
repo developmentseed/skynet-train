@@ -58,6 +58,7 @@ Customize the training run with these params:
 [--gpu [GPU [GPU ...]]] # set gpu devices to use
 [--display-frequency DISPLAY_FREQUENCY] # frequency of logging output (affects granularity of plots)
 [--iterations ITERATIONS] # total number of iterations to run
+[--crop CROP] # crop trianing images to CROPxCROP pixels
 [--batch-size BATCH_SIZE] # batch size (adjust this up or down based on GPU size. defaults to 6 for segnet and 16 for segnet_basic)
 [--sync SYNC]
 ```

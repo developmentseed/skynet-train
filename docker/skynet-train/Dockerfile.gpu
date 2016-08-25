@@ -10,7 +10,9 @@ RUN pip install boto3 && \
     pip install cython && \
     pip install scikit-image
 
-RUN pip install awscli
+# bsdmainutils is for 'paste' and 'column' commands, used in plot_training_log
+RUN pip install awscli && \
+    apt-get install -y bsdmainutils
 
 ADD package.json /workspace/package.json
 RUN npm install

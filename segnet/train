@@ -81,6 +81,12 @@ def snapshot_run(starting_snapshot_iteration, snapshot_iterations):
         train_args.append('-snapshot')
         train_args.append('%s_iter_%s.solverstate' % (snapshot_prefix, starting_snapshot_iteration))
 
+    parallel = 1
+    if not args.cpu:
+        train_args.append('-gpu')
+        train_args.append(','.join(map(str, args.gpu)))
+        parallel = len(args.gpu)
+
     # Set up solver_START-END.prototxt file
     previous_solver = None
     if starting_snapshot_iteration > 0:
@@ -90,10 +96,11 @@ def snapshot_run(starting_snapshot_iteration, snapshot_iterations):
 
     max_iterations = snapshot_iterations * (1 + starting_snapshot_iteration / snapshot_iterations)
     assert max_iterations % snapshot_iterations == 0
-    epoch = int(math.ceil(float(train_size) / batch_size))
+    epoch = int(math.ceil(float(train_size) / batch_size / parallel))
     solver = setup_solver(train_net_path, epoch, previous_solver,
                           max_iter=max_iterations,
                           snapshot=snapshot_iterations)
+
     solver_file = 'solver_%s-%s.prototxt' % (starting_snapshot_iteration, max_iterations)
     solver_path = os.path.join(args.output, solver_file)
     with open(solver_path, 'w') as f:
@@ -101,10 +108,6 @@ def snapshot_run(starting_snapshot_iteration, snapshot_iterations):
 
     train_args.append('-solver')
     train_args.append(solver_path)
-
-    if not args.cpu:
-        train_args.append('-gpu')
-        train_args.append(','.join(map(str, args.gpu)))
 
     logfile = 'train_%s-%s.log' % (starting_snapshot_iteration, max_iterations)
     logfile = os.path.join(args.output, logfile)
