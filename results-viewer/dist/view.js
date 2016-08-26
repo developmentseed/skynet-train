@@ -5870,7 +5870,7 @@ module.exports = function (opts) {
   return map;
 };
 },{"./access-token":43,"mapbox-gl":116,"mapbox-gl-styles/styles/basic-v9.json":15}],46:[function(require,module,exports){
-var _templateObject = _taggedTemplateLiteral(['\n    <div>\n    <dl>\n      <dt>Total Correctness:</dt>\n      <dd>', '</dd>\n      <dt>Total Completeness:</dt>\n      <dd>', '</dd>\n    </dl>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  '], ['\n    <div>\n    <dl>\n      <dt>Total Correctness:</dt>\n      <dd>', '</dd>\n      <dt>Total Completeness:</dt>\n      <dd>', '</dd>\n    </dl>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  ']),
+var _templateObject = _taggedTemplateLiteral(['\n    <div>\n    <dl>\n      <dt>Total Correctness:</dt>\n      <dd>', '</dd>\n      <dt>Total Completeness:</dt>\n      <dd>', '</dd>\n    </dl>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul class=', '>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  '], ['\n    <div>\n    <dl>\n      <dt>Total Correctness:</dt>\n      <dd>', '</dd>\n      <dt>Total Completeness:</dt>\n      <dd>', '</dd>\n    </dl>\n    <button onclick=', '>Most Correct</button>\n    <button onclick=', '>Least Correct</button>\n    <button onclick=', '>Most Complete</button>\n    <button onclick=', '>Least Complete</button>\n    <ul class=', '>\n        <li class="header">\n          <div>Input Image</div>\n          <div>OSM "ground truth"</div>\n          <div>Net Prediction</div>\n        </li>\n        ', '\n    </ul>\n    ', '\n    </div>\n  ']),
     _templateObject2 = _taggedTemplateLiteral(['\n             <li data-tile=', '>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 ', '\n                 <div>\n                  Completeness: ', '\n                  Correctness: ', '\n                 </div>\n             </li>\n             '], ['\n             <li data-tile=', '>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 <img style=', ' src=', ' onclick=', '></img>\n                 ', '\n                 <div>\n                  Completeness: ', '\n                  Correctness: ', '\n                 </div>\n             </li>\n             ']),
     _templateObject3 = _taggedTemplateLiteral(['\n                   <img style=', ' src=', ' onclick=', '></img>\n                   '], ['\n                   <img style=', ' src=', ' onclick=', '></img>\n                   ']),
     _templateObject4 = _taggedTemplateLiteral(['<button onclick=', '>Load More</button>'], ['<button onclick=', '>Load More</button>']);
@@ -5888,7 +5888,7 @@ var getSatelliteTileURL = require('./get-tile-url');
 var query = qs.parse(window.location.search.substring(1));
 var baseurl = query.baseurl || '';
 
-var map = createMap(query).on('load', function () {
+var map = !query.hasOwnProperty('no-map') && createMap(query).on('load', function () {
   map.addSource('tile', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addLayer({
     'id': 'tile',
@@ -5970,9 +5970,9 @@ var view = function (params, state, send) {
     return send('app:sort', { key: 'completeness_score:descending' });
   }, function () {
     return send('app:sort', { key: 'completeness_score:ascending' });
-  }, items.slice(0, state.app.limit).map(function (item) {
+  }, map ? 'sidebar' : '', items.slice(0, state.app.limit).map(function (item) {
     var tile = getTile(item);
-    var image = getSatelliteTileURL(query, tile[0], tile[1], tile[2]);
+    var image = tile ? getSatelliteTileURL(query, tile[0], tile[1], tile[2]) : baseurl + item.input;
     return choo.view(_templateObject2, getTile(item), imgStyle, image, onClick, imgStyle, baseurl + item.groundtruth, onClick, imgStyle, baseurl + item.prediction, onClick, query.compare ? choo.view(_templateObject3, imgStyle, url.resolve(baseurl, query.compare + '/' + item.prediction), onClick) : '', item.metrics.completeness_score.toFixed(3), item.metrics.correctness_score.toFixed(3));
   }), state.app.limit < state.app.items.length ? choo.view(_templateObject4, function () {
     return send('app:loadMore');
@@ -5987,10 +5987,13 @@ document.querySelector('#app').appendChild(app.start());
 
 function getTile(item) {
   var match = /(\d*)-(\d*)-(\d*).png/.exec(item.test_data);
-  return match.slice(1, 4);
+  return match && match.slice(1, 4);
 }
 
 function onClick(event) {
+  if (!map) {
+    return;
+  }
   var tile = event.currentTarget.parentNode.dataset.tile.split(',').map(Number);
   tile = [tile[1], tile[2], tile[0]];
   var [w, s, e, n] = tilebelt.tileToBBOX(tile);

@@ -9,7 +9,7 @@ const getSatelliteTileURL = require('./get-tile-url')
 const query = qs.parse(window.location.search.substring(1))
 const baseurl = query.baseurl || ''
 
-let map = createMap(query)
+let map = !query.hasOwnProperty('no-map') && createMap(query)
 .on('load', function () {
   map.addSource('tile', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
   map.addLayer({
@@ -89,7 +89,7 @@ const view = (params, state, send) => {
     <button onclick=${() => send('app:sort', { key: 'correctness_score:ascending' })}>Least Correct</button>
     <button onclick=${() => send('app:sort', { key: 'completeness_score:descending' })}>Most Complete</button>
     <button onclick=${() => send('app:sort', { key: 'completeness_score:ascending' })}>Least Complete</button>
-    <ul>
+    <ul class=${map ? 'sidebar' : ''}>
         <li class="header">
           <div>Input Image</div>
           <div>OSM "ground truth"</div>
@@ -99,7 +99,8 @@ const view = (params, state, send) => {
         .slice(0, state.app.limit)
         .map(item => {
           var tile = getTile(item)
-          var image = getSatelliteTileURL(query, tile[0], tile[1], tile[2])
+          var image = tile ? getSatelliteTileURL(query, tile[0], tile[1], tile[2])
+            : (baseurl + item.input)
           return choo.view`
              <li data-tile=${getTile(item)}>
                  <img style=${imgStyle} src=${image} onclick=${onClick}></img>
@@ -132,10 +133,11 @@ document.querySelector('#app').appendChild(app.start())
 
 function getTile (item) {
   var match = /(\d*)-(\d*)-(\d*).png/.exec(item.test_data)
-  return match.slice(1, 4)
+  return match && match.slice(1, 4)
 }
 
 function onClick (event) {
+  if (!map) { return }
   var tile = event.currentTarget.parentNode.dataset.tile.split(',').map(Number)
   tile = [tile[1], tile[2], tile[0]]
   var [w, s, e, n] = tilebelt.tileToBBOX(tile)
