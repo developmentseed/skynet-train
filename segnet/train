@@ -25,6 +25,7 @@ parser.add_argument('--output', type=str, required=True)
 parser.add_argument('--data', type=str, required=True)
 parser.add_argument('--fetch-data', type=str)
 parser.add_argument('--snapshot', type=int, default=10000)
+parser.add_argument('--weights', type=str)
 parser.add_argument('--iterations', type=int, default=100000)
 parser.add_argument('--cpu', action='store_true')
 parser.add_argument('--gpu', type=int, nargs='*', default=[0])
@@ -75,11 +76,14 @@ def setup_solver(train_net_path, epoch, previous_solver=None, **kwargs):
     return str(s)
 
 
-def snapshot_run(starting_snapshot_iteration, snapshot_iterations):
+def snapshot_run(starting_snapshot_iteration, snapshot_iterations, initial_weight_file):
     train_args = [caffe_binary, 'train']
     if starting_snapshot_iteration > 0:
         train_args.append('-snapshot')
         train_args.append('%s_iter_%s.solverstate' % (snapshot_prefix, starting_snapshot_iteration))
+    elif initial_weight_file:
+        train_args.append('-weights')
+        train_args.append(initial_weight_file)
 
     parallel = 1
     if not args.cpu:
@@ -192,7 +196,7 @@ if args.sync:
 # Run the training/testing loop
 assert args.snapshot > 0
 while current_iteration < args.iterations:
-    snapshot = snapshot_run(current_iteration, args.snapshot)
+    snapshot = snapshot_run(current_iteration, args.snapshot, args.weights)
     logs_to_plot = glob.glob(os.path.join(args.output, 'train*.log'))
     logs_to_plot = map(lambda p: os.path.relpath(p, args.output), logs_to_plot)
     subprocess.call([plot_log] + logs_to_plot, cwd=args.output)
