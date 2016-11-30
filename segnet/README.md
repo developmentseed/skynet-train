@@ -22,7 +22,7 @@ nvidia-docker.)
 2. Run:
 
 ```sh
-nvidia-docker \
+nvidia-docker run \
     -v /path/to/training/dataset:/workdir/data \
     -v /path/to/training/output:/workdir/training \
     -e AWS_ACCESS_KEY_ID=... \
