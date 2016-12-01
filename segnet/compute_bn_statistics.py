@@ -2,9 +2,13 @@
 
 # Modified from https://github.com/alexgkendall/SegNet-Tutorial
 
-# https://github.com/BVLC/caffe/issues/861
+# > The Batch Normalisation layers in SegNet shift the input feature maps
+# > according to their mean and variance statistics for each mini batch during
+# > training. At test time we must use the statistics for the entire dataset.
+# (http://mi.eng.cam.ac.uk/projects/segnet/tutorial.html)
+
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg')  # https://github.com/BVLC/caffe/issues/861
 
 import os
 import numpy as np

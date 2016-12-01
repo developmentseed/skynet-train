@@ -1,5 +1,20 @@
 #!/usr/bin/env node
 
+/*
+ * Convenience script for testing net from a particular snapshot during
+ * training.
+ *
+ * 1. Compute the 'batch normalization' statistics from the training data, and
+ * create a new copy of the trained weights with this normalization applied to
+ * them.  (See compute_bn_statistics.py for details.)
+ * If the given weights were `snapshots/segnet_iter_X.caffemodel`, the
+ * normalized weights will be at `snapshots/segnet_iter_X.inference/test_weights.caffemodel`
+ *
+ * 2. Run forward inference on the test data, outputting prediction images and
+ * completeness/correctness metrics into `snapshots/segnet_iter_X.results/`.
+ * (See test_segmentation.py for details.)
+ */
+
 var fs = require('fs-extra')
 var path = require('path')
 var spawnSync = require('child_process').spawnSync
