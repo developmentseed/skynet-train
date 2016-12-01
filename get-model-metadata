@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# Download from S3 all of the non-huge data from model training:
+# - caffe prototxt files
+# - training logs
+# - test output (metrics only, not the images)
+
+# Usage: get-model-metadata bucketname/prefix path/to/local/dir [model_name]
+
+set -eu
+
+INPUT=$1
+OUTPUT=$2
+# optionally accept a specific model as third arg
+if [[ $# -gt 2 ]]; then
+  INPUT="$INPUT/$3"
+  OUTPUT="$OUTPUT/$3"
+fi
+
+aws s3 cp --recursive s3://$INPUT/ $OUTPUT \
+  --exclude '*.caffemodel' \
+  --exclude '*.solverstate' \
+  --exclude '*.png' --include 'train-loss-vs-iters.png' \
+  --exclude '*.inference/*'
+
