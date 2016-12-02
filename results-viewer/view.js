@@ -8,8 +8,9 @@ const getSatelliteTileURL = require('./get-tile-url')
 
 const query = qs.parse(window.location.search.substring(1))
 const baseurl = query.baseurl || ''
+const accessToken = require('./access-token')(query)
 
-let map = !query.hasOwnProperty('no-map') && createMap(query)
+let map = accessToken && !query.hasOwnProperty('no-map') && createMap(query)
 .on('load', function () {
   map.addSource('tile', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
   map.addLayer({
@@ -77,6 +78,16 @@ const view = (params, state, send) => {
 
   const imgStyle = query.compare ? 'width: 24%' : 'width: 32%'
 
+  let missingAccessToken = ''
+  if (!query.hasOwnProperty('no-map') && !accessToken) {
+    const url = window.location.href.replace(/#.*$/, '')
+    missingAccessToken = choo.view`
+    <div class='warning'>
+      To view results on the map, add a Mapbox access token to the URL like so:
+      ${url}${/\?/.test(url) ? '&' : '?'}access_token=ACCESSTOKEN
+    </div>`
+  }
+
   return choo.view`
     <div>
     <dl>
@@ -89,6 +100,7 @@ const view = (params, state, send) => {
     <button onclick=${() => send('app:sort', { key: 'correctness_score:ascending' })}>Least Correct</button>
     <button onclick=${() => send('app:sort', { key: 'completeness_score:descending' })}>Most Complete</button>
     <button onclick=${() => send('app:sort', { key: 'completeness_score:ascending' })}>Least Complete</button>
+    ${missingAccessToken}
     <ul class=${map ? 'sidebar' : ''}>
         <li class="header">
           <div>Input Image</div>
