@@ -4,6 +4,7 @@
   "description": "(Adapted from http://mi.eng.cam.ac.uk/projects/segnet/tutorial.html) ## Batch Normalization",
   "main": "class-weights.js",
   "scripts": {
+    "start-viewer": "budo --dir results-viewer/dist results-viewer/view.js:view.js",
     "bundle-viewer": "browserify results-viewer/view.js > results-viewer/dist/view.js",
     "bundle-demo": "browserify segnet/demo.js > segnet/static/demo.js",
     "build-docker": "docker build -t developmentseed/skynet-train:gpu . -f docker/skynet-train/Dockerfile.gpu"
@@ -14,12 +15,13 @@
   "dependencies": {
     "choo": "^2.2.0",
     "fs-extra": "^0.30.0",
+    "mapbox-gl": "^0.28.0",
     "mapbox-gl-styles": "^2.0.2",
     "minimist": "^1.2.0"
   },
   "devDependencies": {
     "browserify": "^13.0.1",
-    "budo": "^8.3.0",
+    "budo": "^8.4.0",
     "es2020": "^1.1.6",
     "eslint": "^3.2.2",
     "eslint-config-standard": "^5.3.5",

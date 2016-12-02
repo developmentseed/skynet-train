@@ -11,9 +11,11 @@
     li.header div,
     li img { width: 32%; display: inline-block; cursor: pointer; }
     li img { background-color: black; }
-    #map { position:fixed; top:0; bottom:0; right: 0; width: 65%; }
+    #app { position:relative; z-index: 1; }
+    #map { position:fixed; z-index: 0; top:0; bottom:0; right: 0; width: 65%; }
     dd, dt { display: inline-block; margin: 0; padding: 0 }
     dt { font-weight: bold; }
+    .warning { color: #C8851A; }
   </style>
 </head>
 <body>
