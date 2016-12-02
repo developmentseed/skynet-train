@@ -165,6 +165,7 @@ def make_parser():
     p.add_argument('train_model')
     p.add_argument('weights')
     p.add_argument('out_dir')
+    p.add_argument('gpu', type=int)
     return p
 
 
@@ -172,6 +173,9 @@ if __name__ == '__main__':
     caffe.set_mode_gpu()
     p = make_parser()
     args = p.parse_args()
+
+    if args.gpu is not None:
+        caffe.set_device(args.gpu)
 
     # build and save testable net
     if not os.path.exists(args.out_dir):

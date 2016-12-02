@@ -60,7 +60,7 @@ spawnSync('python', [
   train,
   weights,
   inferenceDir
-], { stdio: 'inherit' })
+].concat(argv.gpu ? ['--gpu', argv.gpu] : []), { stdio: 'inherit' })
 
 console.log('Running inference.')
 spawnSync('python', [
@@ -69,7 +69,7 @@ spawnSync('python', [
   '--weights', path.join(inferenceDir, 'test_weights.caffemodel'),
   '--classes', classes,
   '--output', output
-], { stdio: 'inherit' })
+].concat(argv.gpu ? ['--gpu', argv.gpu] : []), { stdio: 'inherit' })
 
 fs.copySync(path.join(__dirname, '../results-viewer/dist'), output)
 

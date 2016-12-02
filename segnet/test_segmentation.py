@@ -26,6 +26,7 @@ parser.add_argument('--weights', type=str, required=True)
 parser.add_argument('--output', type=str, required=True)
 parser.add_argument('--classes', type=str, required=True)
 parser.add_argument('--metrics-only', default=False, action='store_true')
+parser.add_argument('--gpu', type=int)
 args = parser.parse_args()
 
 with open(args.classes) as classes:
@@ -41,6 +42,8 @@ test_data = m.group(1)
 test_data = open(test_data, 'r').readlines()
 
 caffe.set_mode_gpu()
+if args.gpu is not None:
+    caffe.set_device(args.gpu)
 
 net = caffe.Net(args.model,
                 args.weights,
