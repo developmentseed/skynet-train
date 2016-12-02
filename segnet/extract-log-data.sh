@@ -7,8 +7,9 @@ set -eu
 SKYNET_TRAIN=${SKYNET_TRAIN:-"."}
 
 MODEL=$1
+NAME=${2:-$(basename $MODEL)}
 TO_CSV="sed -re s/[[:blank:]]+/,/g"
-PREPEND_NAME="sed s/^/$(basename $MODEL),/"
+PREPEND_NAME="sed s/^/$NAME,/"
 
 
 FIRST=true
