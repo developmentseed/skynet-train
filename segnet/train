@@ -131,6 +131,14 @@ def test_run(snapshot, iteration):
                  '--train', train_net_path,
                  '--weights', snapshot,
                  '--classes', os.path.join(args.data, 'classes.json')]
+
+    # If we're running on a single GPU, then pass its id to the test-runner
+    # scripts as well. Otherwise, if multiple training runs are happening on
+    # a single machine, they would all run their tests using GPU 0, and fail
+    if not args.cpu and len(args.gpu) == 1:
+        test_args.append('--gpu')
+        test_args.append(','.join(map(str, args.gpu)))
+
     print('Testing: %s' % ' '.join(test_args))
     with open(logfile, 'w') as f:
         exitcode = subprocess.call(test_args, stdout=f, stderr=subprocess.STDOUT)
@@ -171,33 +179,46 @@ with open(train_net_path, 'r') as f:
     batch_size = int(batch_size.group(1))
 train_size = sum(1 for line in open(os.path.join(args.data, 'train.txt')))
 
-
-# Determine which, if any, snapshot we're starting from
-if os.path.isdir(snapshot_dir):
-    # If there are snapshots, grab the latest one.
-    snaps = glob.glob(os.path.join(snapshot_dir, args.model + '*.solverstate'))
-    snaps = map(lambda s: re.search('(\d+)\.solverstate', s), snaps)
-    snaps = map(lambda m: int(m.group(1)), filter(lambda m: m, snaps))
-    snaps.sort()
-    current_iteration = snaps[-1]
-else:
-    os.mkdir(snapshot_dir)
-    current_iteration = 0
-
-
 # Look for a snapshot
 if args.sync:
     subprocess.call(['aws', 's3', 'sync', args.sync, args.output])
 
+# Determine which, if any, snapshot we're starting from
+current_iteration = 0
+initial_snapshot = None
+if os.path.isdir(snapshot_dir):
+    # If there are snapshots, grab the latest one.
+    solver_states = glob.glob(os.path.join(snapshot_dir, args.model + '*.solverstate'))
+    # parse iteration numbers from the snapshot filenames
+    snaps = map(lambda s: re.search('(\d+)\.solverstate', s), solver_states)
+    snaps = map(lambda m: int(m.group(1)), filter(lambda m: m, snaps))
+    snaps.sort()
+    if len(snaps) > 0:
+        current_iteration = snaps[-1]
+        initial_snapshot = solver_states[-1].replace('solverstate', 'caffemodel')
+else:
+    os.mkdir(snapshot_dir)
+
+# If there was a previous snapshot and it doesn't have an associated test
+# results dir, then run that test before we resume training.
+if initial_snapshot is not None:
+    previous_results_dir = initial_snapshot.replace('caffemodel', 'results')
+    if not os.path.exists(previous_results_dir):
+        test_run(initial_snapshot, current_iteration)
+
 # Run the training/testing loop
 assert args.snapshot > 0
 while current_iteration < args.iterations:
+    # Train for args.snapshot iterations
     snapshot = snapshot_run(current_iteration, args.snapshot)
+    current_iteration += args.snapshot
+    # Plot the loss curve
     logs_to_plot = glob.glob(os.path.join(args.output, 'train*.log'))
     logs_to_plot = map(lambda p: os.path.relpath(p, args.output), logs_to_plot)
     subprocess.call([plot_log] + logs_to_plot, cwd=args.output)
-    current_iteration += args.snapshot
+    # Test the net
     test_run(snapshot, current_iteration)
+    # Sync to S3
     if args.sync:
         print('Syncing back to %s' % args.sync)
         subprocess.call(['aws', 's3', 'sync', args.output, args.sync])
