@@ -165,7 +165,7 @@ def make_parser():
     p.add_argument('train_model')
     p.add_argument('weights')
     p.add_argument('out_dir')
-    p.add_argument('gpu', type=int)
+    p.add_argument('--gpu', type=int, default=None)
     return p
 
 

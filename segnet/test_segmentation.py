@@ -26,7 +26,7 @@ parser.add_argument('--weights', type=str, required=True)
 parser.add_argument('--output', type=str, required=True)
 parser.add_argument('--classes', type=str, required=True)
 parser.add_argument('--metrics-only', default=False, action='store_true')
-parser.add_argument('--gpu', type=int)
+parser.add_argument('--gpu', type=int, default=None)
 args = parser.parse_args()
 
 with open(args.classes) as classes:
