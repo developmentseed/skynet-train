@@ -18,6 +18,6 @@ for log in $MODEL/train_*.log; do
   # data
   tail -n +2 $data
   rm $data
-  rm ${data/train/test}
+  rm "$(basename $log).test"
 done
 
