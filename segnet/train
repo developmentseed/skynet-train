@@ -185,8 +185,7 @@ if args.sync:
 
 # Determine which, if any, snapshot we're starting from
 current_iteration = 0
-previous_iteration = None
-previous_snapshot = None
+initial_snapshot = None
 if os.path.isdir(snapshot_dir):
     # If there are snapshots, grab the latest one.
     solver_states = glob.glob(os.path.join(snapshot_dir, args.model + '*.solverstate'))
@@ -196,18 +195,16 @@ if os.path.isdir(snapshot_dir):
     snaps.sort()
     if len(snaps) > 0:
         current_iteration = snaps[-1]
-    if len(snaps) > 1:
-        previous_iteration = snaps[-2]
-        previous_snapshot = solver_states[-2].replace('solverstate', 'caffemodel')
+        initial_snapshot = solver_states[-1].replace('solverstate', 'caffemodel')
 else:
     os.mkdir(snapshot_dir)
 
 # If there was a previous snapshot and it doesn't have an associated test
 # results dir, then run that test before we resume training.
-if previous_iteration is not None:
-    previous_results_dir = previous_snapshot.replace('caffemodel', 'results')
+if initial_snapshot is not None:
+    previous_results_dir = initial_snapshot.replace('caffemodel', 'results')
     if not os.path.exists(previous_results_dir):
-        test_run(previous_snapshot, previous_iteration)
+        test_run(initial_snapshot, current_iteration)
 
 # Run the training/testing loop
 assert args.snapshot > 0
