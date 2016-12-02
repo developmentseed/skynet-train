@@ -7,6 +7,9 @@ set -eu
 SKYNET_TRAIN=${SKYNET_TRAIN:-"."}
 
 MODEL=$1
+TO_CSV="sed -re s/[[:blank:]]+/,/g"
+PREPEND_NAME="sed s/^/$(basename $MODEL),/"
+
 
 FIRST=true
 for log in $MODEL/train_*.log; do
@@ -14,10 +17,12 @@ for log in $MODEL/train_*.log; do
   data="$(basename $log).train"
 
   # header
-  if $FIRST; then head -n 1 $data; fi
+  if $FIRST; then head -n 1 $data | $TO_CSV | sed s/^/Model,/; fi
   # data
-  tail -n +2 $data
+  tail -n +2 $data | $TO_CSV | $PREPEND_NAME
+
   rm $data
   rm "$(basename $log).test"
+  FIRST=false
 done
 
