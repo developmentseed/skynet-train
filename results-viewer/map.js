@@ -31,7 +31,7 @@ module.exports = function (opts) {
   }
 
   mapboxgl.accessToken = getAccessToken(opts)
-  const map = new mapboxgl.Map({
+  const map = window._map = new mapboxgl.Map({
     container: opts.container || 'map',
     style: style,
     center: [0, 0],
