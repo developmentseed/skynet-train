@@ -89,7 +89,7 @@ const view = (params, state, send) => {
   const colCount = 2 + baseurls.length
   const colMargin = 2
   const colStyle = [
-    `width: calc(${100 / colCount}% - ${colMargin * colCount}px)`,
+    `width: calc((100% - ${colMargin * colCount}px) / ${colCount})`,
     `margin-left: ${colMargin}px`
   ].join('; ')
 
@@ -120,8 +120,8 @@ const view = (params, state, send) => {
                <div style=${colStyle}>
                  ${resultNames[i]}<br>
                  <div class='metrics'>
-                   <nobr>Correct: ${result.metrics.correctness.toFixed(3)}</nobr><br>
-                   <nobr>Complete: ${result.metrics.completeness.toFixed(3)}</nobr><br>
+                   <span>Correct: ${result.metrics.correctness.toFixed(3)}</span><br>
+                   <span>Complete: ${result.metrics.completeness.toFixed(3)}</span><br>
                  </div>
                </div>`
           })}
@@ -146,8 +146,8 @@ const view = (params, state, send) => {
                       <div style=${colStyle} class="image-prediction">
                         <img src=${result.baseurl + it.prediction} onclick=${onClick}></img>
                         <div class="metrics">
-                         <nobr>Complete: ${it.metrics.completeness_score.toFixed(3)}</nobr>
-                         <nobr>Correct: ${it.metrics.correctness_score.toFixed(3)}</nobr>
+                         <span>Complete: ${it.metrics.completeness_score.toFixed(3)}</span>
+                         <span>Correct: ${it.metrics.correctness_score.toFixed(3)}</span>
                         </div>
                       </div>`
                  })}
@@ -267,7 +267,7 @@ function logged (view, tag) {
  * want ['5000', '55000']
  */
 function stripCommon (strings) {
-  if (!strings.length) return []
+  if (strings.length <= 1) return strings
   let digits = []
   let pre = 0
   while (pre < strings[0].length) {
