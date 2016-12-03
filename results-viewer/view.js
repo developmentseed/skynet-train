@@ -252,6 +252,13 @@ function logged (view, tag) {
   }
 }
 
+/**
+ * Given an array of strings, return a new array wherein the common prefix
+ * and common postfix for the given strings is removed.
+ *
+ * Example: stripCommon(['abcHello Worldxyz', 'abc123xyz', 'abcxyz']) ===
+ * ['Hello World', '123', '']
+ */
 function stripCommon (strings) {
   if (!strings.length) return []
   let pre = 0
