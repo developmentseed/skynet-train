@@ -9,6 +9,8 @@ const query = qs.parse(window.location.search.substring(1))
 const accessToken = require('./access-token')(query)
 let baseurls = query.baseurl || ''
 if (!Array.isArray(baseurls)) { baseurls = [baseurls] }
+// add trailing slash
+baseurls = baseurls.map(b => (b === '' || b.endsWith('/')) ? b : `${b}/`)
 
 let map = accessToken && !query.hasOwnProperty('no-map') && createMap(query)
 .on('load', function () {
@@ -258,9 +260,15 @@ function logged (view, tag) {
  *
  * Example: stripCommon(['abcHello Worldxyz', 'abc123xyz', 'abcxyz']) ===
  * ['Hello World', '123', '']
+ *
+ * One small exception: do only treat numerical digits (and "K") as 'common'
+ * if the whole string of them is common -- otherwise
+ * ['abc_123_5000', 'abc_123_55000'] would become ['', '5'], whereas we really
+ * want ['5000', '55000']
  */
 function stripCommon (strings) {
   if (!strings.length) return []
+  let digits = []
   let pre = 0
   while (pre < strings[0].length) {
     let chars = strings.map(s => s.charAt(pre))
@@ -268,28 +276,31 @@ function stripCommon (strings) {
     if (chars.some(c => c !== chars[0])) {
       break
     }
+    if (/[\dK]/.test(chars[0])) {
+      digits.push(chars[0])
+    } else {
+      digits = []
+    }
     pre++
   }
-  strings = strings.map(s => s.slice(Math.max(pre, 0)))
+  console.log(digits)
+  strings = strings.map(s => digits.join('') + s.slice(Math.max(pre, 0)))
 
   let post = 0
-  let zeroes = 0
+  digits = []
   while (post < strings[0].length) {
     let chars = strings.map(s => s.charAt(s.length - post - 1))
     if (chars.some(c => !c.length)) { break }
     if (chars.some(c => c !== chars[0])) {
       break
     }
-    if (chars[0] === '0') {
-      zeroes++
+    if (/[\dK]/.test(chars[0])) {
+      digits.unshift(chars[0])
     } else {
-      zeroes = 0
+      digits = []
     }
     post++
   }
-
-  let z = ''
-  while (--zeroes >= 0) { z = z + '0' }
-  return strings.map(s => s.slice(0, s.length - post) + z)
+  return strings.map(s => s.slice(0, s.length - post) + digits.join(''))
 }
 
