@@ -107,7 +107,6 @@ const view = (params, state, send) => {
     <button onclick=${() => send('app:sort', { key: 'correctness_score:ascending' })}>Least Correct</button>
     <button onclick=${() => send('app:sort', { key: 'completeness_score:descending' })}>Most Complete</button>
     <button onclick=${() => send('app:sort', { key: 'completeness_score:ascending' })}>Least Complete</button>
-    <button onclick=${() => send('app:sort', { key: 'completeness_score:ascending' })}>Least Complete</button>
     <button onclick=${() => send('app:sort', { key: 'index' })}>Reset</button>
     ${missingAccessToken}
     <ul class=${map ? 'sidebar' : ''}>
