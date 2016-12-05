@@ -5,16 +5,22 @@
   <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.18.0/mapbox-gl.css' rel='stylesheet' />
   <style>
     body { margin:0; padding:0; font-family: sans-serif; }
+    #app { position:relative; width: 50%; }
+    #map { position:fixed; z-index: 0; top:0; bottom:0; right: 0; width: 50%; }
+
+    ul.sidebar{
+      margin: 0;
+      padding: 1%;
+    }
     ul { list-style-type: none }
-    ul.sidebar{ width: 30%; }
     li { margin-bottom: 20px; }
-    li.header div,
-    li img { width: 32%; display: inline-block; cursor: pointer; }
-    li img { background-color: black; }
-    #app { position:relative; z-index: 1; }
-    #map { position:fixed; z-index: 0; top:0; bottom:0; right: 0; width: 65%; }
-    dd, dt { display: inline-block; margin: 0; padding: 0 }
-    dt { font-weight: bold; }
+    li:after { content:""; display: table; clear: both; }
+    li > div { width: 33%; float: left; display: block; cursor: pointer; }
+    li > div + div { margin-left: 2px; }
+    li > div img { display: block; width: 100%; background-color: black; }
+
+    .header { font-weight: bold; }
+    .metrics { font-size: 12px; }
     .warning { color: #C8851A; }
   </style>
 </head>
