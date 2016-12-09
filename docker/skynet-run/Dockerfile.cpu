@@ -1,0 +1,11 @@
+FROM developmentseed/caffe-segnet:cpu
+ENV DEBIAN_FRONTEND noninteractive
+RUN curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
+    sudo apt-get install -y nodejs build-essential && \
+    pip install flask
+ADD package.json /workspace/package.json
+RUN npm install
+ADD . /workspace
+EXPOSE 5000
+
+ENV CPU_ONLY=1
