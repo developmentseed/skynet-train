@@ -9,7 +9,7 @@ var flatten = require('geojson-flatten')
 var normalize = require('geojson-normalize')
 var _ = require('lodash')
 var distance = require('turf-line-distance')
-var clip = require('turf-bbox-clip')
+var simplify = require('turf-simplify')
 
 var input = JSON.parse(fs.readFileSync(path.join(__dirname, argv._[0])))
 input = normalize(input)
@@ -28,13 +28,14 @@ function scale (coords) {
 }
 
 // threshold distance given as a percentage of tile pixels
-var thresholdDistance = argv._[4] * distance({
+var xDistance = distance({
   type: 'LineString',
   coordinates: [
     [tileBbox[0], tileBbox[1]],
     [tileBbox[2], tileBbox[1]]
   ]
 })
+var thresholdDistance = argv._[4] * xDistance
 
 var scaledInput = {
   type: 'FeatureCollection',
@@ -62,8 +63,8 @@ var features = polyspine(scaledInput).map(function (linestring) {
 })
 
 var filteredFeatures = features.filter(f => {
-  return distance(f) > thresholdDistance
-})
+  return distance(f) > thresholdDistance && distance(f) < 3 * xDistance
+}).map(f => simplify(f, 0.00007))
 
 scaledInput.features = scaledInput.features.concat(filteredFeatures).reverse()
 console.log(JSON.stringify(scaledInput))

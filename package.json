@@ -21,7 +21,7 @@
     "minimist": "^1.2.0",
     "polyspine": "^1.0.0",
     "tilebelt": "^1.0.1",
-    "turf-bbox-clip": "git://github.com/Turfjs/turf-bbox-clip.git"
+    "turf-simplify": "^3.0.12"
   },
   "devDependencies": {
     "browserify": "^13.0.1",
