@@ -66,7 +66,4 @@ var filteredFeatures = features.filter(f => {
   return distance(f) > thresholdDistance && distance(f) < 3 * xDistance
 }).map(f => simplify(f, 0.00007))
 
-scaledInput.features = scaledInput.features.concat(filteredFeatures).reverse()
-console.log(JSON.stringify(scaledInput))
-//
-// console.log(features.join('\n'))
+console.log(filteredFeatures.map(f => JSON.stringify(f)).join('\n'))
