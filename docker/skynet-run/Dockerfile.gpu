@@ -2,7 +2,8 @@ FROM developmentseed/caffe-segnet:gpu
 ENV DEBIAN_FRONTEND noninteractive
 RUN curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
     sudo apt-get install -y nodejs build-essential && \
-    pip install flask
+    pip install flask && \
+    pip install mercantile
 ADD package.json /workspace/package.json
 RUN npm install
 ADD . /workspace
