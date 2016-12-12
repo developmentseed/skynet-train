@@ -57,7 +57,7 @@ net = caffe.Net(args.model,
 @app.route('/index.json')
 def index():
     return jsonify(tilejson='2.0.0',
-                   tiles=[request.url.replace('index.json', '{z}/{x}/{y}.png')])
+                   tiles=[request.url.replace('index.json', '{z}/{x}/{y}/tile.png')])
 
 
 def send_prediction(im):
