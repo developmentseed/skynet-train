@@ -29,7 +29,7 @@ aws_session = Session()
 s3 = aws_session.client('s3')
 
 # Import arguments
-cpu_only_env = bool(os.getenv('CPU_ONLY', False))
+cpu_only_env = bool(os.getenv('SKYNET_CPU_ONLY', False))
 parser = argparse.ArgumentParser()
 parser.add_argument('image_tiles', type=str)
 parser.add_argument('--model', type=str, default='/model/segnet_deploy.prototxt')
