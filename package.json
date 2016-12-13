@@ -22,6 +22,7 @@
     "mapbox-gl-styles": "^2.0.2",
     "minimist": "^1.2.0",
     "polyspine": "^1.0.0",
+    "tile-cover": "^3.0.1",
     "tilebelt": "^1.0.1",
     "turf-line-distance": "^3.0.12",
     "turf-simplify": "^3.0.12"

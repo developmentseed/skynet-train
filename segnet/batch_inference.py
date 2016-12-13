@@ -56,11 +56,11 @@ def resolve_s3(s3uri):
 def setup_net(model, weights, cpu_only):
     model_file = resolve_s3(model)
     weights_file = resolve_s3(weights)
-    if not os.path.isfile(model) and os.path.isdir('/model'):
+    if not os.path.isfile(weights_file) and os.path.isdir('/model'):
         caffemodels = filter(lambda x: x.endswith('.caffemodel'), os.listdir('/model'))
         if len(caffemodels) == 0:
             raise 'No .caffemodel files found in /model.'
-        model_file = caffemodels[0]
+        weights_file = '/model/%s' % caffemodels[0]
 
     # read model definition
     model = open(model_file, 'r').read()
@@ -86,6 +86,15 @@ def get_image_tile(url, x, y, z):
     image_url = url.replace('{x}', str(x)).replace('{y}', str(y)).replace('{z}', str(z))
     resp = requests.get(image_url)
     return Image.open(StringIO.StringIO(resp.content))
+
+
+def upload_centerlines(filename, output_bucket, prefix):
+    uid = ''.join(random.choice('abcdef0123456789') for _ in range(6))
+    key = '%s/centerlines.%s-%s.geojson' % (prefix, time.time(), uid)
+    click.echo('Uploading geojson %s' % key)
+    s3.upload_file(filename, output_bucket, key, ExtraArgs={
+        'ContentType': 'application/ndjson'
+    })
 
 
 @click.command()
@@ -150,19 +159,17 @@ def run_batch(queue_name, image_tiles, model, weights, classes, cpu_only):
 
         # upload centerlines geojson to S3 every so often
         count += 1
-        if count % 5 == 0:
+        if count % 5000 == 0:
             centerlines.close()
-            uid = ''.join(random.choice('abcdef0123456789') for _ in range(6))
-            key = '%s/centerlines.%s-%s.geojson' % (prefix, time.time(), uid)
-            click.echo('Uploading geojson %s' % key)
-            s3.upload_file(centerlines.name, output_bucket, key, ExtraArgs={
-                'ContentType': 'application/ndjson'
-            })
+            upload_centerlines(centerlines.name, output_bucket, prefix)
             # clear the file out and continue writing
             centerlines = open(centerlines.name, 'w+b')
 
         # remove message from the queue
         message.delete()
+
+    centerlines.close()
+    upload_centerlines(centerlines.name, output_bucket, prefix)
 
 
 if __name__ == '__main__':
