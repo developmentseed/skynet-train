@@ -86,8 +86,8 @@ net = caffe.Net(model_file,
 def index():
     return jsonify(tilejson='2.0.0',
                    tiles=[request.url.replace('index.json', '{z}/{x}/{y}/tile.png')],
-                   minzoom=min_zoom,
-                   maxzoom=max_zoom)
+                   minzoom=args.min_zoom,
+                   maxzoom=args.max_zoom)
 
 
 def send_prediction(im):
@@ -102,7 +102,7 @@ def send_prediction(im):
 
 @app.route('/<int:z>/<int:x>/<int:y>/tile.png')
 def tile(x, y, z):
-    if z > max_zoom or z < min_zoom:
+    if z > args.max_zoom or z < args.min_zoom:
         return abort(404)
     image_url = args.image_tiles.replace('{x}', str(x)).replace('{y}', str(y)).replace('{z}', str(z))
     resp = requests.get(image_url)
