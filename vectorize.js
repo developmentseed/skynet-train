@@ -15,8 +15,8 @@ var input = JSON.parse(fs.readFileSync(path.join(__dirname, argv._[0])))
 input = normalize(input)
 input.features = _.flatten(input.features.map(f => flatten(f)))
 
-// arguments given as filename, then z y x
-var tile = argv._.slice(1, 4).reverse()
+// arguments given as filename, then x y z, then distance threshold as ratio of image width
+var tile = argv._.slice(1, 4)
 var tileBbox = tilebelt.tileToBBOX(tile)
 
 // given image coordinates (0-255), returns geo coordinates
@@ -27,7 +27,6 @@ function scale (coords) {
   ]
 }
 
-// threshold distance given as a percentage of tile pixels
 var xDistance = distance({
   type: 'LineString',
   coordinates: [
