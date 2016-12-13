@@ -11,7 +11,7 @@ var _ = require('lodash')
 var distance = require('turf-line-distance')
 var simplify = require('turf-simplify')
 
-var input = JSON.parse(fs.readFileSync(path.join(__dirname, argv._[0])))
+var input = JSON.parse(fs.readFileSync(path.resolve(__dirname, argv._[0])))
 input = normalize(input)
 input.features = _.flatten(input.features.map(f => flatten(f)))
 

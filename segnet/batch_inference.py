@@ -6,12 +6,15 @@ import re
 import os
 import os.path
 import sys
+import time
+import random
 import requests
 import numpy as np
 from PIL import Image
 import click
 import json
 import StringIO
+import subprocess
 import tempfile
 from boto3.session import Session
 caffe_root = os.getenv('CAFFE_ROOT', '/home/ubuntu/caffe-segnet/')
@@ -20,9 +23,12 @@ import caffe
 
 from inference import predict
 from queue import receive
+from vectorize import vectorize
 
 aws_session = Session()
 s3 = aws_session.client('s3')
+dirname = os.path.dirname(os.path.realpath(__file__))
+polys_to_lines = os.path.join(dirname, '../vectorize.js')
 
 
 def parse_s3_uri(s3uri):
@@ -92,11 +98,16 @@ def get_image_tile(url, x, y, z):
 def run_batch(queue_name, image_tiles, model, weights, classes, cpu_only):
     net = setup_net(model, weights, cpu_only)
     classes_file = resolve_s3(classes)
+
     # read classes metadata
     with open(classes_file) as classes:
         colors = map(lambda x: x['color'][1:], json.load(classes))
         colors.append('000000')
         colors = map(lambda rgbstr: tuple(map(ord, rgbstr.decode('hex'))), colors)
+
+    count = 0
+    centerlines = tempfile.NamedTemporaryFile(suffix='.geojson', delete=False)
+    click.echo('geojson output: %s' % centerlines.name)
 
     for message in receive(queue_name):
         click.echo('processing: %s' % message.body)
@@ -104,13 +115,52 @@ def run_batch(queue_name, image_tiles, model, weights, classes, cpu_only):
 
         image = get_image_tile(image_tiles, x, y, z)
 
-        with tempfile.NamedTemporaryFile(suffix='.png') as predicted:
-            # run the net and upload result
-            make_prediction(net, colors, image, predicted)
-            key = '%s/%s/%s/%s.png' % (prefix, z, x, y)
-            s3.upload_fileobj(predicted, output_bucket, key, ExtraArgs={
-                'ContentType': 'image/png'
+        # run prediction
+        predicted = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        make_prediction(net, colors, image, predicted)
+        predicted.close()
+
+        # upload raster prediction image
+        key = '%s/%s/%s/%s.png' % (prefix, z, x, y)
+        s3.upload_file(predicted.name, output_bucket, key, ExtraArgs={
+            'ContentType': 'image/png'
+        })
+
+        # trace raster -> polygons
+        polygonized = tempfile.NamedTemporaryFile(suffix='.geojson', delete=False)
+        polygonized.write(json.dumps(vectorize(predicted.name)))
+        polygonized.close()
+
+        # upload polygon geojson for this tile
+        key = '%s/%s/%s/%s.polygons.geojson' % (prefix, z, x, y)
+        s3.upload_file(polygonized.name, output_bucket, key, ExtraArgs={
+            'ContentType': 'application/json'
+        })
+
+        # polygons => centerlines
+        polyspine_args = map(str, [polys_to_lines, polygonized.name, x, y, z, 0.2])
+        exitcode = subprocess.call(polyspine_args, stdout=centerlines)
+
+        # clean up tempfiles
+        os.remove(predicted.name)
+        os.remove(polygonized.name)
+
+        if exitcode != 0:
+            raise 'Vectorize exited nonzero'
+
+        # upload centerlines geojson to S3 every so often
+        count += 1
+        if count % 5 == 0:
+            centerlines.close()
+            uid = ''.join(random.choice('abcdef0123456789') for _ in range(6))
+            key = '%s/centerlines.%s-%s.geojson' % (prefix, time.time(), uid)
+            click.echo('Uploading geojson %s' % key)
+            s3.upload_file(centerlines.name, output_bucket, key, ExtraArgs={
+                'ContentType': 'application/ndjson'
             })
+            # clear the file out and continue writing
+            centerlines = open(centerlines.name, 'w+b')
+
         # remove message from the queue
         message.delete()
 
