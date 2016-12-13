@@ -32,6 +32,15 @@ def receive(queue):
 @click.option('--tile-url', type=str)
 @click.option('--dryrun', is_flag=True, default=False)
 def populate(queue_name, output_bucket, tileset, input, tile_url, dryrun):
+    """
+    Populate the given SQS queue with tasks of the form [bucket, tileset, z, x, y],
+    to be consumed by batch_process.py.
+
+    Works well with cover.js. E.g.:
+
+    ./cover.js file.geojson 15 16 | python segnet/queue.py my_queue my_bucket my_tileset
+    """
+
     try:
         input = click.open_file(input).readlines()
     except IOError:
