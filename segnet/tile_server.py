@@ -9,6 +9,7 @@ from flask import Flask
 from flask import request
 from flask import send_file
 from flask import jsonify
+from flask import abort
 import requests
 import numpy as np
 from PIL import Image
@@ -101,6 +102,8 @@ def send_prediction(im):
 
 @app.route('/<int:z>/<int:x>/<int:y>/tile.png')
 def tile(x, y, z):
+    if z > max_zoom or z < min_zoom:
+        return abort(404)
     image_url = args.image_tiles.replace('{x}', str(x)).replace('{y}', str(y)).replace('{z}', str(z))
     resp = requests.get(image_url)
     return send_prediction(Image.open(StringIO.StringIO(resp.content)))
