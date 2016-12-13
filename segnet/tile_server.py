@@ -34,6 +34,8 @@ parser.add_argument('--model', type=str, default='/model/segnet_deploy.prototxt'
 parser.add_argument('--weights', type=str, default='/model/weights.caffemodel')
 parser.add_argument('--classes', type=str, default='/model/classes.json')
 parser.add_argument('--cpu-mode', action='store_true', default=cpu_only_env)
+parser.add_argument('--min-zoom', type=int, default=0)
+parser.add_argument('--max-zoom', type=int, default=18)
 args = parser.parse_args()
 
 
@@ -82,7 +84,9 @@ net = caffe.Net(model_file,
 @app.route('/index.json')
 def index():
     return jsonify(tilejson='2.0.0',
-                   tiles=[request.url.replace('index.json', '{z}/{x}/{y}/tile.png')])
+                   tiles=[request.url.replace('index.json', '{z}/{x}/{y}/tile.png')],
+                   minzoom=min_zoom,
+                   maxzoom=max_zoom)
 
 
 def send_prediction(im):
