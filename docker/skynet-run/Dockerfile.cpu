@@ -11,4 +11,4 @@ RUN npm install
 ADD . /workspace
 EXPOSE 5000
 
-ENV CPU_ONLY=1
+ENV SKYNET_CPU_ONLY=1
