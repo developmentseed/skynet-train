@@ -2,6 +2,7 @@
 import matplotlib
 matplotlib.use('Agg')
 
+import re
 import os.path
 import sys
 from flask import Flask
@@ -14,6 +15,7 @@ from PIL import Image
 import argparse
 import json
 import StringIO
+from boto3.session import Session
 caffe_root = os.getenv('CAFFE_ROOT', '/home/ubuntu/caffe-segnet/')
 sys.path.insert(0, caffe_root + 'python')
 import caffe
@@ -21,10 +23,11 @@ import caffe
 from inference import predict
 
 app = Flask(__name__)
-
-cpu_only_env = bool(os.getenv('CPU_ONLY', False))
+aws_session = Session()
+s3 = aws_session.client('s3')
 
 # Import arguments
+cpu_only_env = bool(os.getenv('CPU_ONLY', False))
 parser = argparse.ArgumentParser()
 parser.add_argument('image_tiles', type=str)
 parser.add_argument('--model', type=str, default='/model/segnet_deploy.prototxt')
@@ -33,15 +36,37 @@ parser.add_argument('--classes', type=str, default='/model/classes.json')
 parser.add_argument('--cpu-mode', action='store_true', default=cpu_only_env)
 args = parser.parse_args()
 
+
+def resolve_s3(s3uri):
+    match = re.search('s3://([^/]*)/(.*)$', s3uri)
+    if not match:
+        return s3uri
+    bucket = match.group(1)
+    key = match.group(2)
+    target = '/model/' + os.path.basename(key)
+    if not os.path.isfile(target):
+        print('downloading ' + s3uri + ' to ' + target)
+        s3.download_file(bucket, key, target)
+    else:
+        print(s3uri + ' appears to have already been downloaded to ' + target +
+              '; using local copy.')
+    return target
+
+
+model_file = resolve_s3(args.model)
+weights_file = resolve_s3(args.weights)
+classes_file = resolve_s3(args.classes)
+
+
 # read classes metadata
-with open(args.classes) as classes:
+with open(classes_file) as classes:
     colors = map(lambda x: x['color'][1:], json.load(classes))
     colors.append('000000')
     colors = map(lambda rgbstr: tuple(map(ord, rgbstr.decode('hex'))), colors)
 num_classes = len(colors)
 
 # read model definition
-model = open(args.model, 'r').read()
+model = open(model_file, 'r').read()
 
 # create net
 if args.cpu_mode:
@@ -49,8 +74,8 @@ if args.cpu_mode:
 else:
     caffe.set_mode_gpu()
 
-net = caffe.Net(args.model,
-                args.weights,
+net = caffe.Net(model_file,
+                weights_file,
                 caffe.TEST)
 
 
