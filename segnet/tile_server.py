@@ -9,6 +9,7 @@ from flask import Flask
 from flask import request
 from flask import send_file
 from flask import jsonify
+from flask import abort
 import requests
 import numpy as np
 from PIL import Image
@@ -23,6 +24,7 @@ import caffe
 from inference import predict
 
 app = Flask(__name__)
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300
 aws_session = Session()
 s3 = aws_session.client('s3')
 
@@ -34,6 +36,8 @@ parser.add_argument('--model', type=str, default='/model/segnet_deploy.prototxt'
 parser.add_argument('--weights', type=str, default='/model/weights.caffemodel')
 parser.add_argument('--classes', type=str, default='/model/classes.json')
 parser.add_argument('--cpu-mode', action='store_true', default=cpu_only_env)
+parser.add_argument('--min-zoom', type=int, default=0)
+parser.add_argument('--max-zoom', type=int, default=18)
 args = parser.parse_args()
 
 
@@ -82,7 +86,9 @@ net = caffe.Net(model_file,
 @app.route('/index.json')
 def index():
     return jsonify(tilejson='2.0.0',
-                   tiles=[request.url.replace('index.json', '{z}/{x}/{y}/tile.png')])
+                   tiles=[request.url.replace('index.json', '{z}/{x}/{y}/tile.png')],
+                   minzoom=args.min_zoom,
+                   maxzoom=args.max_zoom)
 
 
 def send_prediction(im):
@@ -97,6 +103,8 @@ def send_prediction(im):
 
 @app.route('/<int:z>/<int:x>/<int:y>/tile.png')
 def tile(x, y, z):
+    if z > args.max_zoom or z < args.min_zoom:
+        return abort(404)
     image_url = args.image_tiles.replace('{x}', str(x)).replace('{y}', str(y)).replace('{z}', str(z))
     resp = requests.get(image_url)
     return send_prediction(Image.open(StringIO.StringIO(resp.content)))
