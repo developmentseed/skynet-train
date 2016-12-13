@@ -24,6 +24,7 @@ import caffe
 from inference import predict
 
 app = Flask(__name__)
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300
 aws_session = Session()
 s3 = aws_session.client('s3')
 
