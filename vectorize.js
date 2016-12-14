@@ -22,8 +22,8 @@ var tileBbox = tilebelt.tileToBBOX(tile)
 // given image coordinates (0-255), returns geo coordinates
 function scale (coords) {
   return [
-    coords[0] * (Math.abs(tileBbox[2] - tileBbox[0]) / 255) - tileBbox[0],
-    (255 - coords[1]) * (Math.abs(tileBbox[3] - tileBbox[1]) / 255) - tileBbox[1]
+    coords[0] * (Math.abs(tileBbox[2] - tileBbox[0]) / 255) + tileBbox[0],
+    (255 - coords[1]) * (Math.abs(tileBbox[3] - tileBbox[1]) / 255) + tileBbox[1]
   ]
 }
 

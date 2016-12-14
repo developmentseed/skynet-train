@@ -21,6 +21,8 @@ limitations under the License.
 import numpy
 import potrace as _potrace
 from PIL import Image
+import click
+import json
 
 
 def lines_to_features(lines, source='imagery'):
@@ -70,3 +72,13 @@ def vectorize(img_file, turdsize=10.0, tolerance=0.2):
     arr = numpy.any(arr[:, :, :-1], axis=2)
     lines = potrace_array(arr, turdsize, tolerance)
     return to_geojson(lines)
+
+
+@click.command()
+@click.argument('img_file', default='-')
+def vectorize_cmd(img_file):
+    click.echo(json.dumps(vectorize(img_file)))
+
+
+if __name__ == '__main__':
+    vectorize_cmd()
