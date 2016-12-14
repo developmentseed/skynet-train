@@ -102,7 +102,7 @@ process.umask = function() { return 0; };
 },{}],2:[function(require,module,exports){
 module.exports = require('xhr')
 
-},{"xhr":226}],3:[function(require,module,exports){
+},{"xhr":227}],3:[function(require,module,exports){
 // (c) Dean McNamee <dean@gmail.com>, 2012.
 //
 // https://github.com/deanm/css-color-parser-js
@@ -1244,7 +1244,7 @@ function rad(_) {
     return _ * Math.PI / 180;
 }
 
-},{"wgs84":224}],9:[function(require,module,exports){
+},{"wgs84":225}],9:[function(require,module,exports){
 var geojsonArea = require('geojson-area');
 
 module.exports = rewind;
@@ -9601,7 +9601,7 @@ function ValidationError(key, value /*, message, ...*/) {
 
 module.exports = ValidationError;
 
-},{"util":215}],42:[function(require,module,exports){
+},{"util":216}],42:[function(require,module,exports){
 'use strict';
 
 var refProperties = require('./util/ref_properties');
@@ -13303,7 +13303,7 @@ function offsetLine(rings, offset) {
     }
     return newRings;
 }
-},{"../util/dictionary_coder":180,"../util/intersection_tests":187,"../util/struct_array":192,"../util/util":194,"../util/vectortile_to_geojson":195,"./extent":79,"./load_geometry":81,"feature-filter":6,"grid-index":29,"pbf":203,"point-geometry":204,"vector-tile":216}],81:[function(require,module,exports){
+},{"../util/dictionary_coder":180,"../util/intersection_tests":187,"../util/struct_array":192,"../util/util":194,"../util/vectortile_to_geojson":195,"./extent":79,"./load_geometry":81,"feature-filter":6,"grid-index":29,"pbf":203,"point-geometry":204,"vector-tile":217}],81:[function(require,module,exports){
 'use strict';
 var util = require('../util/util');
 var EXTENT = require('./extent');
@@ -18568,7 +18568,7 @@ var GeoJSONWorkerSource = function (VectorTileWorkerSource) {
     return GeoJSONWorkerSource;
 }(VectorTileWorkerSource);
 module.exports = GeoJSONWorkerSource;
-},{"../util/ajax":174,"./geojson_wrapper":109,"./vector_tile_worker_source":120,"geojson-rewind":9,"geojson-vt":13,"supercluster":210,"vt-pbf":220}],109:[function(require,module,exports){
+},{"../util/ajax":174,"./geojson_wrapper":109,"./vector_tile_worker_source":120,"geojson-rewind":9,"geojson-vt":13,"supercluster":210,"vt-pbf":221}],109:[function(require,module,exports){
 'use strict';
 var Point = require('point-geometry');
 var VectorTileFeature = require('vector-tile').VectorTileFeature;
@@ -18634,7 +18634,7 @@ GeoJSONWrapper.prototype.feature = function feature(i) {
     return new FeatureWrapper(this.features[i]);
 };
 module.exports = GeoJSONWrapper;
-},{"../data/extent":79,"point-geometry":204,"vector-tile":216}],110:[function(require,module,exports){
+},{"../data/extent":79,"point-geometry":204,"vector-tile":217}],110:[function(require,module,exports){
 'use strict';
 var util = require('../util/util');
 var window = require('../util/window');
@@ -19491,7 +19491,7 @@ Tile.prototype.hasData = function hasData() {
     return this.state === 'loaded' || this.state === 'reloading';
 };
 module.exports = Tile;
-},{"../data/bucket":70,"../data/feature_index":80,"../symbol/collision_box":143,"../symbol/collision_tile":145,"../symbol/symbol_instances":154,"../symbol/symbol_quads":155,"../util/util":194,"../util/vectortile_to_geojson":195,"feature-filter":6,"pbf":203,"vector-tile":216}],118:[function(require,module,exports){
+},{"../data/bucket":70,"../data/feature_index":80,"../symbol/collision_box":143,"../symbol/collision_tile":145,"../symbol/symbol_instances":154,"../symbol/symbol_quads":155,"../util/util":194,"../util/vectortile_to_geojson":195,"feature-filter":6,"pbf":203,"vector-tile":217}],118:[function(require,module,exports){
 'use strict';
 var WhooTS = require('whoots-js');
 var Coordinate = require('../geo/coordinate');
@@ -19643,7 +19643,7 @@ function getQuadkey(z, x, y) {
     return quadkey;
 }
 module.exports = TileCoord;
-},{"../geo/coordinate":86,"whoots-js":225}],119:[function(require,module,exports){
+},{"../geo/coordinate":86,"whoots-js":226}],119:[function(require,module,exports){
 'use strict';
 var Evented = require('../util/evented');
 var util = require('../util/util');
@@ -19836,7 +19836,7 @@ VectorTileWorkerSource.prototype.redoPlacement = function redoPlacement(params, 
     }
 };
 module.exports = VectorTileWorkerSource;
-},{"../util/ajax":174,"../util/util":194,"./worker_tile":123,"pbf":203,"vector-tile":216}],121:[function(require,module,exports){
+},{"../util/ajax":174,"../util/util":194,"./worker_tile":123,"pbf":203,"vector-tile":217}],121:[function(require,module,exports){
 'use strict';
 var ajax = require('../util/ajax');
 var ImageSource = require('./image_source');
@@ -25853,7 +25853,7 @@ var workerURL = window.URL.createObjectURL(new WebWorkify(require('../../source/
 module.exports = function () {
     return new window.Worker(workerURL);
 };
-},{"../../source/worker":122,"../window":177,"webworkify":223}],177:[function(require,module,exports){
+},{"../../source/worker":122,"../window":177,"webworkify":224}],177:[function(require,module,exports){
 'use strict';
 module.exports = self;
 },{}],178:[function(require,module,exports){
@@ -26186,7 +26186,7 @@ function getCentroidCell(polygon) {
     }
     return new Cell(x / area, y / area, 0, polygon);
 }
-},{"./intersection_tests":187,"point-geometry":204,"tinyqueue":211}],185:[function(require,module,exports){
+},{"./intersection_tests":187,"point-geometry":204,"tinyqueue":212}],185:[function(require,module,exports){
 'use strict';
 module.exports = Glyphs;
 function Glyphs(pbf, end) {
@@ -27308,7 +27308,7 @@ exports.sphericalToCartesian = function (spherical) {
         r * Math.cos(polar)
     ];
 };
-},{"../geo/coordinate":86,"point-geometry":204,"unitbezier":213}],195:[function(require,module,exports){
+},{"../geo/coordinate":86,"point-geometry":204,"unitbezier":214}],195:[function(require,module,exports){
 'use strict';
 var Feature = function Feature(vectorTileFeature, z, x, y) {
     this.type = 'Feature';
@@ -27530,7 +27530,7 @@ module.exports = function (headers) {
 
   return result
 }
-},{"for-each":7,"trim":212}],201:[function(require,module,exports){
+},{"for-each":7,"trim":213}],201:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -29204,6 +29204,197 @@ function getY(p) {
 }
 
 },{"kdbush":33}],211:[function(require,module,exports){
+// a tile is an array [x,y,z]
+var d2r = Math.PI / 180,
+    r2d = 180 / Math.PI;
+
+function tileToBBOX (tile) {
+    var e = tile2lon(tile[0]+1,tile[2]);
+    var w = tile2lon(tile[0],tile[2]);
+    var s = tile2lat(tile[1]+1,tile[2]);
+    var n = tile2lat(tile[1],tile[2]);
+    return [w,s,e,n];
+}
+
+function tileToGeoJSON (tile) {
+    var bbox = tileToBBOX(tile);
+    var poly = {
+        type: 'Polygon',
+        coordinates:
+            [
+                [
+                    [bbox[0],bbox[1]],
+                    [bbox[0], bbox[3]],
+                    [bbox[2], bbox[3]],
+                    [bbox[2], bbox[1]],
+                    [bbox[0], bbox[1]]
+                ]
+            ]
+    };
+    return poly;
+}
+
+function tile2lon(x, z) {
+    return (x/Math.pow(2,z)*360-180);
+}
+
+function tile2lat(y, z) {
+    var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
+    return (r2d*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
+}
+
+function pointToTile(lon, lat, z) {
+    var tile = pointToTileFraction(lon, lat, z);
+    tile[0] = Math.floor(tile[0]);
+    tile[1] = Math.floor(tile[1]);
+    return tile;
+}
+
+function getChildren (tile) {
+    return [
+        [tile[0]*2, tile[1]*2, tile[2]+1],
+        [tile[0]*2+1, tile[1]*2, tile[2 ]+1],
+        [tile[0]*2+1, tile[1]*2+1, tile[2]+1],
+        [tile[0]*2, tile[1]*2+1, tile[2]+1],
+    ];
+}
+
+function getParent (tile) {
+    // top left
+    if(tile[0]%2===0 && tile[1]%2===0) {
+        return [tile[0]/2, tile[1]/2, tile[2]-1];
+    }
+    // bottom left
+    else if((tile[0]%2===0) && (!tile[1]%2===0)) {
+        return [tile[0]/2, (tile[1]-1)/2, tile[2]-1];
+    }
+    // top right
+    else if((!tile[0]%2===0) && (tile[1]%2===0)) {
+        return [(tile[0]-1)/2, (tile[1])/2, tile[2]-1];
+    }
+    // bottom right
+    else {
+        return [(tile[0]-1)/2, (tile[1]-1)/2, tile[2]-1];
+    }
+}
+
+function getSiblings (tile) {
+    return getChildren(getParent(tile));
+}
+
+function hasSiblings(tile, tiles) {
+    var siblings = getSiblings(tile);
+    for (var i = 0; i < siblings.length; i++) {
+        if (!hasTile(tiles, siblings[i])) return false;
+    }
+    return true;
+}
+
+function hasTile(tiles, tile) {
+    for (var i = 0; i < tiles.length; i++) {
+        if (tilesEqual(tiles[i], tile)) return true;
+    }
+    return false;
+}
+
+function tilesEqual(tile1, tile2) {
+    return (
+        tile1[0] === tile2[0] &&
+        tile1[1] === tile2[1] &&
+        tile1[2] === tile2[2]
+    );
+}
+
+function tileToQuadkey(tile) {
+  var index = '';
+  for (var z = tile[2]; z > 0; z--) {
+      var b = 0;
+      var mask = 1 << (z - 1);
+      if ((tile[0] & mask) !== 0) b++;
+      if ((tile[1] & mask) !== 0) b += 2;
+      index += b.toString();
+  }
+  return index;
+}
+
+function quadkeyToTile(quadkey) {
+    var x = 0;
+    var y = 0;
+    var z = quadkey.length;
+
+    for (var i = z; i > 0; i--) {
+        var mask = 1 << (i - 1);
+        switch (quadkey[z - i]) {
+            case '0':
+                break;
+
+            case '1':
+                x |= mask;
+                break;
+
+            case '2':
+                y |= mask;
+                break;
+
+            case '3':
+                x |= mask;
+                y |= mask;
+                break;
+        }
+    }
+    return [x,y,z];
+}
+
+function bboxToTile(bboxCoords) {
+    var min = pointToTile(bboxCoords[0], bboxCoords[1], 32);
+    var max = pointToTile(bboxCoords[2], bboxCoords[3], 32);
+    var bbox = [min[0], min[1], max[0], max[1]];
+
+    var z = getBboxZoom(bbox);
+    if (z === 0) return [0,0,0];
+    var x = bbox[0] >>> (32 - z);
+    var y = bbox[1] >>> (32 - z);
+    return [x,y,z];
+}
+
+function getBboxZoom(bbox) {
+    var MAX_ZOOM = 28;
+    for (var z = 0; z < MAX_ZOOM; z++) {
+        var mask = 1 << (32 - (z + 1));
+        if (((bbox[0] & mask) != (bbox[2] & mask)) ||
+            ((bbox[1] & mask) != (bbox[3] & mask))) {
+            return z;
+        }
+    }
+
+    return MAX_ZOOM;
+}
+
+function pointToTileFraction(lon, lat, z) {
+    var sin = Math.sin(lat * d2r),
+        z2 = Math.pow(2, z),
+        x = z2 * (lon / 360 + 0.5),
+        y = z2 * (0.5 - 0.25 * Math.log((1 + sin) / (1 - sin)) / Math.PI);
+    return [x, y, z];
+}
+
+module.exports = {
+    tileToGeoJSON: tileToGeoJSON,
+    tileToBBOX: tileToBBOX,
+    getChildren: getChildren,
+    getParent: getParent,
+    getSiblings: getSiblings,
+    hasTile: hasTile,
+    hasSiblings: hasSiblings,
+    tilesEqual: tilesEqual,
+    tileToQuadkey: tileToQuadkey,
+    quadkeyToTile: quadkeyToTile,
+    pointToTile: pointToTile,
+    bboxToTile: bboxToTile,
+    pointToTileFraction: pointToTileFraction
+};
+
+},{}],212:[function(require,module,exports){
 'use strict';
 
 module.exports = TinyQueue;
@@ -29284,7 +29475,7 @@ function swap(data, i, j) {
     data[j] = tmp;
 }
 
-},{}],212:[function(require,module,exports){
+},{}],213:[function(require,module,exports){
 
 exports = module.exports = trim;
 
@@ -29300,7 +29491,7 @@ exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
 
-},{}],213:[function(require,module,exports){
+},{}],214:[function(require,module,exports){
 /*
  * Copyright (C) 2008 Apple Inc. All Rights Reserved.
  *
@@ -29407,14 +29598,14 @@ UnitBezier.prototype.solve = function(x, epsilon) {
     return this.sampleCurveY(this.solveCurveX(x, epsilon));
 };
 
-},{}],214:[function(require,module,exports){
+},{}],215:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],215:[function(require,module,exports){
+},{}],216:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -30004,12 +30195,12 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":214,"_process":1,"inherits":31}],216:[function(require,module,exports){
+},{"./support/isBuffer":215,"_process":1,"inherits":31}],217:[function(require,module,exports){
 module.exports.VectorTile = require('./lib/vectortile.js');
 module.exports.VectorTileFeature = require('./lib/vectortilefeature.js');
 module.exports.VectorTileLayer = require('./lib/vectortilelayer.js');
 
-},{"./lib/vectortile.js":217,"./lib/vectortilefeature.js":218,"./lib/vectortilelayer.js":219}],217:[function(require,module,exports){
+},{"./lib/vectortile.js":218,"./lib/vectortilefeature.js":219,"./lib/vectortilelayer.js":220}],218:[function(require,module,exports){
 'use strict';
 
 var VectorTileLayer = require('./vectortilelayer');
@@ -30028,7 +30219,7 @@ function readTile(tag, layers, pbf) {
 }
 
 
-},{"./vectortilelayer":219}],218:[function(require,module,exports){
+},{"./vectortilelayer":220}],219:[function(require,module,exports){
 'use strict';
 
 var Point = require('point-geometry');
@@ -30263,7 +30454,7 @@ function signedArea(ring) {
     return sum;
 }
 
-},{"point-geometry":204}],219:[function(require,module,exports){
+},{"point-geometry":204}],220:[function(require,module,exports){
 'use strict';
 
 var VectorTileFeature = require('./vectortilefeature.js');
@@ -30326,7 +30517,7 @@ VectorTileLayer.prototype.feature = function(i) {
     return new VectorTileFeature(this._pbf, end, this.extent, this._keys, this._values);
 };
 
-},{"./vectortilefeature.js":218}],220:[function(require,module,exports){
+},{"./vectortilefeature.js":219}],221:[function(require,module,exports){
 var Pbf = require('pbf')
 var vtpb = require('./vector-tile-pb')
 var GeoJSONWrapper = require('./lib/geojson_wrapper')
@@ -30482,7 +30673,7 @@ function wrapValue (value) {
   return result
 }
 
-},{"./lib/geojson_wrapper":221,"./vector-tile-pb":222,"pbf":203}],221:[function(require,module,exports){
+},{"./lib/geojson_wrapper":222,"./vector-tile-pb":223,"pbf":203}],222:[function(require,module,exports){
 'use strict'
 
 var Point = require('point-geometry')
@@ -30550,7 +30741,7 @@ FeatureWrapper.prototype.bbox = function () {
 
 FeatureWrapper.prototype.toGeoJSON = VectorTileFeature.prototype.toGeoJSON
 
-},{"point-geometry":204,"vector-tile":216}],222:[function(require,module,exports){
+},{"point-geometry":204,"vector-tile":217}],223:[function(require,module,exports){
 'use strict';
 
 // tile ========================================
@@ -30656,7 +30847,7 @@ function writeLayer(layer, pbf) {
     if (layer.extent !== undefined) pbf.writeVarintField(5, layer.extent);
 }
 
-},{}],223:[function(require,module,exports){
+},{}],224:[function(require,module,exports){
 var bundleFn = arguments[3];
 var sources = arguments[4];
 var cache = arguments[5];
@@ -30739,12 +30930,12 @@ module.exports = function (fn, options) {
     return worker;
 };
 
-},{}],224:[function(require,module,exports){
+},{}],225:[function(require,module,exports){
 module.exports.RADIUS = 6378137;
 module.exports.FLATTENING = 1/298.257223563;
 module.exports.POLAR_RADIUS = 6356752.3142;
 
-},{}],225:[function(require,module,exports){
+},{}],226:[function(require,module,exports){
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -30834,7 +31025,7 @@ exports.getMercCoords = getMercCoords;
 Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
-},{}],226:[function(require,module,exports){
+},{}],227:[function(require,module,exports){
 "use strict";
 var window = require("global/window")
 var once = require("once")
@@ -31055,7 +31246,7 @@ function _createXHR(options) {
 
 function noop() {}
 
-},{"global/window":28,"is-function":32,"once":199,"parse-headers":200,"xtend":227}],227:[function(require,module,exports){
+},{"global/window":28,"is-function":32,"once":199,"parse-headers":200,"xtend":228}],228:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -31076,7 +31267,7 @@ function extend() {
     return target
 }
 
-},{}],228:[function(require,module,exports){
+},{}],229:[function(require,module,exports){
 module.exports = function getAccessToken(opts) {
   var accessToken = opts.access_token || localStorage.getItem('accessToken');
   if (accessToken) {
@@ -31084,7 +31275,7 @@ module.exports = function getAccessToken(opts) {
   }
   return accessToken;
 };
-},{}],229:[function(require,module,exports){
+},{}],230:[function(require,module,exports){
 var getAccessToken = require('./access-token');
 
 module.exports = function (opts, z, x, y) {
@@ -31097,7 +31288,7 @@ module.exports = function (opts, z, x, y) {
 
   return url.replace('{z}', z).replace('{x}', x).replace('{y}', y);
 };
-},{"./access-token":228}],230:[function(require,module,exports){
+},{"./access-token":229}],231:[function(require,module,exports){
 var mapboxgl = require('mapbox-gl');
 var labelLayers = require('mapbox-gl-styles/styles/basic-v9.json').layers.filter(function (l) {
   return (/poi|place|country/.test(l.id)
@@ -31144,7 +31335,7 @@ module.exports = function (opts) {
 
   return map;
 };
-},{"./access-token":228,"mapbox-gl":92,"mapbox-gl-styles/styles/basic-v9.json":67}],231:[function(require,module,exports){
+},{"./access-token":229,"mapbox-gl":92,"mapbox-gl-styles/styles/basic-v9.json":67}],232:[function(require,module,exports){
 var qs = require('querystring');
 var http = require('choo/http');
 var tilebelt = require('tilebelt');
@@ -31170,195 +31361,4 @@ var map = createMap(query).on('load', function () {
     }
   });
 });
-},{"../results-viewer/get-tile-url":229,"../results-viewer/map":230,"choo/http":2,"querystring":207,"tilebelt":232}],232:[function(require,module,exports){
-// a tile is an array [x,y,z]
-var d2r = Math.PI / 180,
-    r2d = 180 / Math.PI;
-
-function tileToBBOX (tile) {
-    var e = tile2lon(tile[0]+1,tile[2]);
-    var w = tile2lon(tile[0],tile[2]);
-    var s = tile2lat(tile[1]+1,tile[2]);
-    var n = tile2lat(tile[1],tile[2]);
-    return [w,s,e,n];
-}
-
-function tileToGeoJSON (tile) {
-    var bbox = tileToBBOX(tile);
-    var poly = {
-        type: 'Polygon',
-        coordinates:
-            [
-                [
-                    [bbox[0],bbox[1]],
-                    [bbox[0], bbox[3]],
-                    [bbox[2], bbox[3]],
-                    [bbox[2], bbox[1]],
-                    [bbox[0], bbox[1]]
-                ]
-            ]
-    };
-    return poly;
-}
-
-function tile2lon(x, z) {
-    return (x/Math.pow(2,z)*360-180);
-}
-
-function tile2lat(y, z) {
-    var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
-    return (r2d*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
-}
-
-function pointToTile(lon, lat, z) {
-    var tile = pointToTileFraction(lon, lat, z);
-    tile[0] = Math.floor(tile[0]);
-    tile[1] = Math.floor(tile[1]);
-    return tile;
-}
-
-function getChildren (tile) {
-    return [
-        [tile[0]*2, tile[1]*2, tile[2]+1],
-        [tile[0]*2+1, tile[1]*2, tile[2 ]+1],
-        [tile[0]*2+1, tile[1]*2+1, tile[2]+1],
-        [tile[0]*2, tile[1]*2+1, tile[2]+1],
-    ];
-}
-
-function getParent (tile) {
-    // top left
-    if(tile[0]%2===0 && tile[1]%2===0) {
-        return [tile[0]/2, tile[1]/2, tile[2]-1];
-    }
-    // bottom left
-    else if((tile[0]%2===0) && (!tile[1]%2===0)) {
-        return [tile[0]/2, (tile[1]-1)/2, tile[2]-1];
-    }
-    // top right
-    else if((!tile[0]%2===0) && (tile[1]%2===0)) {
-        return [(tile[0]-1)/2, (tile[1])/2, tile[2]-1];
-    }
-    // bottom right
-    else {
-        return [(tile[0]-1)/2, (tile[1]-1)/2, tile[2]-1];
-    }
-}
-
-function getSiblings (tile) {
-    return getChildren(getParent(tile));
-}
-
-function hasSiblings(tile, tiles) {
-    var siblings = getSiblings(tile);
-    for (var i = 0; i < siblings.length; i++) {
-        if (!hasTile(tiles, siblings[i])) return false;
-    }
-    return true;
-}
-
-function hasTile(tiles, tile) {
-    for (var i = 0; i < tiles.length; i++) {
-        if (tilesEqual(tiles[i], tile)) return true;
-    }
-    return false;
-}
-
-function tilesEqual(tile1, tile2) {
-    return (
-        tile1[0] === tile2[0] &&
-        tile1[1] === tile2[1] &&
-        tile1[2] === tile2[2]
-    );
-}
-
-function tileToQuadkey(tile) {
-  var index = '';
-  for (var z = tile[2]; z > 0; z--) {
-      var b = 0;
-      var mask = 1 << (z - 1);
-      if ((tile[0] & mask) !== 0) b++;
-      if ((tile[1] & mask) !== 0) b += 2;
-      index += b.toString();
-  }
-  return index;
-}
-
-function quadkeyToTile(quadkey) {
-    var x = 0;
-    var y = 0;
-    var z = quadkey.length;
-
-    for (var i = z; i > 0; i--) {
-        var mask = 1 << (i - 1);
-        switch (quadkey[z - i]) {
-            case '0':
-                break;
-
-            case '1':
-                x |= mask;
-                break;
-
-            case '2':
-                y |= mask;
-                break;
-
-            case '3':
-                x |= mask;
-                y |= mask;
-                break;
-        }
-    }
-    return [x,y,z];
-}
-
-function bboxToTile(bboxCoords) {
-    var min = pointToTile(bboxCoords[0], bboxCoords[1], 32);
-    var max = pointToTile(bboxCoords[2], bboxCoords[3], 32);
-    var bbox = [min[0], min[1], max[0], max[1]];
-
-    var z = getBboxZoom(bbox);
-    if (z === 0) return [0,0,0];
-    var x = bbox[0] >>> (32 - z);
-    var y = bbox[1] >>> (32 - z);
-    return [x,y,z];
-}
-
-function getBboxZoom(bbox) {
-    var MAX_ZOOM = 28;
-    for (var z = 0; z < MAX_ZOOM; z++) {
-        var mask = 1 << (32 - (z + 1));
-        if (((bbox[0] & mask) != (bbox[2] & mask)) ||
-            ((bbox[1] & mask) != (bbox[3] & mask))) {
-            return z;
-        }
-    }
-
-    return MAX_ZOOM;
-}
-
-function pointToTileFraction(lon, lat, z) {
-    var sin = Math.sin(lat * d2r),
-        z2 = Math.pow(2, z),
-        x = z2 * (lon / 360 + 0.5),
-        y = z2 * (0.5 - 0.25 * Math.log((1 + sin) / (1 - sin)) / Math.PI);
-    return [x, y, z];
-}
-
-module.exports = {
-    tileToGeoJSON: tileToGeoJSON,
-    tileToBBOX: tileToBBOX,
-    getChildren: getChildren,
-    getParent: getParent,
-    getSiblings: getSiblings,
-    hasTile: hasTile,
-    hasSiblings: hasSiblings,
-    tilesEqual: tilesEqual,
-    tileToQuadkey: tileToQuadkey,
-    quadkeyToTile: quadkeyToTile,
-    pointToTile: pointToTile,
-    bboxToTile: bboxToTile,
-    pointToTileFraction: pointToTileFraction
-};
-
-},{}]},{},[231]);
+},{"../results-viewer/get-tile-url":230,"../results-viewer/map":231,"choo/http":2,"querystring":207,"tilebelt":211}]},{},[232]);
