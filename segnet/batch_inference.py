@@ -58,7 +58,7 @@ def resolve_s3(s3uri):
     return target
 
 
-def setup_net(model, weights, cpu_only):
+def setup_net(model, weights, gpu, cpu_only):
     model_file = resolve_s3(model)
     weights_file = resolve_s3(weights)
     if not os.path.isfile(weights_file) and os.path.isdir('/model'):
@@ -74,6 +74,7 @@ def setup_net(model, weights, cpu_only):
         caffe.set_mode_cpu()
     else:
         caffe.set_mode_gpu()
+        caffe.set_device(gpu)
 
     return caffe.Net(model_file.encode('utf8'),
                      weights_file.encode('utf8'),
@@ -110,9 +111,10 @@ def upload_centerlines(filename, output_bucket, prefix):
 @click.option('--model', type=str, default='/model/segnet_deploy.prototxt')
 @click.option('--weights', type=str, default='/model/weights.caffemodel')
 @click.option('--classes', type=str, default='/model/classes.json')
+@click.option('--gpu', type=int, default=0)
 @click.option('--cpu-only', is_flag=True, default=False)
-def run_batch(queue_name, image_tiles, model, weights, classes, cpu_only):
-    net = setup_net(model, weights, cpu_only)
+def run_batch(queue_name, image_tiles, model, weights, classes, gpu, cpu_only):
+    net = setup_net(model, weights, gpu, cpu_only)
     classes_file = resolve_s3(classes)
 
     # read classes metadata
