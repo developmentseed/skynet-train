@@ -23,14 +23,11 @@ nvidia-docker.)
 
 ```sh
 nvidia-docker run \
-    -v /path/to/training/dataset:/workdir/data \
-    -v /path/to/training/output:/workdir/training \
+    -v /path/to/training/dataset:/data \
+    -v /path/to/training/output:/output \
     -e AWS_ACCESS_KEY_ID=... \
     -e AWS_SECRET_ACCESS_KEY=... \
     developmentseed/skynet-train:gpu \
-      --model segnet \
-      --output /workdir/training \
-      --data /workdir/data \
       --sync s3://your-bucket/training/blahbla
 ```
 
