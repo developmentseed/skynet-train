@@ -1,7 +1,6 @@
 import json
 import click
 from boto3.session import Session
-import mercantile
 session = Session()
 
 sqs = session.resource('sqs')
@@ -29,27 +28,32 @@ def receive(queue):
 @click.argument('queue_name')
 @click.argument('output_bucket')
 @click.argument('tileset')
-@click.option('--zoom', type=int)
-@click.option('--min-zoom', type=int)
-@click.option('--max-zoom', type=int)
-@click.option('--bbox', nargs=4, type=float, required=True)
+@click.argument('input', default='-')
 @click.option('--tile-url', type=str)
 @click.option('--dryrun', is_flag=True, default=False)
-def populate(queue_name, output_bucket, tileset, zoom, min_zoom, max_zoom, bbox, tile_url, dryrun):
+def populate(queue_name, output_bucket, tileset, input, tile_url, dryrun):
+    """
+    Populate the given SQS queue with tasks of the form [bucket, tileset, z, x, y],
+    to be consumed by batch_process.py.
+
+    Works well with cover.js. E.g.:
+
+    ./cover.js file.geojson 15 16 | python segnet/queue.py my_queue my_bucket my_tileset
+    """
+
+    try:
+        input = click.open_file(input).readlines()
+    except IOError:
+        input = [input]
     batch = []
     count = 0
-    (w, s, e, n) = bbox
-    if not min_zoom:
-        min_zoom = zoom
-    if not max_zoom:
-        max_zoom = zoom
-    for z in range(min_zoom, max_zoom + 1):
-        for tile in mercantile.tiles(w, s, e, n, [z], truncate=False):
-            count += 1
-            batch.append(json.dumps((output_bucket, tileset, z, tile.x, tile.y)))
-            if (len(batch) == 10):
-                send(queue_name, batch, dryrun)
-                batch = []
+    for tile in input:
+        tile = (x, y, z) = json.loads(tile.strip())
+        count += 1
+        batch.append(json.dumps((output_bucket, tileset, z, x, y)))
+        if (len(batch) == 10):
+            send(queue_name, batch, dryrun)
+            batch = []
 
     if len(batch) > 0:
         send(queue_name, batch, dryrun)
@@ -58,10 +62,7 @@ def populate(queue_name, output_bucket, tileset, zoom, min_zoom, max_zoom, bbox,
         tile_url = 'https://%s.s3.amazonaws.com/%s/{z}/{x}/{y}.png' % (output_bucket, tileset)
     tilejson = json.dumps({
         'tilejson': '2.0.0',
-        'tiles': [tile_url],
-        'minzoom': min_zoom,
-        'maxzoom': max_zoom,
-        'bounds': bbox
+        'tiles': [tile_url]
     })
     key = '%s/index.json' % tileset
     click.echo('%s tiles queued. Pushing TileJSON to %s/%s' % (count, output_bucket, tileset))

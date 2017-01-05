@@ -16,11 +16,15 @@
     "choo": "^2.2.0",
     "fs-extra": "^0.30.0",
     "geojson-flatten": "^0.2.1",
+    "geojson-normalize": "0.0.1",
+    "lodash": "^4.17.2",
     "mapbox-gl": "^0.28.0",
     "mapbox-gl-styles": "^2.0.2",
     "minimist": "^1.2.0",
     "polyspine": "^1.0.0",
+    "tile-cover": "^3.0.1",
     "tilebelt": "^1.0.1",
+    "turf-line-distance": "^3.0.12",
     "turf-simplify": "^3.0.12"
   },
   "devDependencies": {

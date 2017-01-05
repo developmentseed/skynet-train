@@ -11,7 +11,7 @@ var _ = require('lodash')
 var distance = require('turf-line-distance')
 var simplify = require('turf-simplify')
 
-var input = JSON.parse(fs.readFileSync(path.join(__dirname, argv._[0])))
+var input = JSON.parse(fs.readFileSync(path.resolve(__dirname, argv._[0])))
 input = normalize(input)
 input.features = _.flatten(input.features.map(f => flatten(f)))
 
@@ -22,8 +22,8 @@ var tileBbox = tilebelt.tileToBBOX(tile)
 // given image coordinates (0-255), returns geo coordinates
 function scale (coords) {
   return [
-    coords[0] * (Math.abs(tileBbox[2] - tileBbox[0]) / 255) - tileBbox[0],
-    (255 - coords[1]) * (Math.abs(tileBbox[3] - tileBbox[1]) / 255) - tileBbox[1]
+    coords[0] * (Math.abs(tileBbox[2] - tileBbox[0]) / 255) + tileBbox[0],
+    (255 - coords[1]) * (Math.abs(tileBbox[3] - tileBbox[1]) / 255) + tileBbox[1]
   ]
 }
 
