@@ -70,7 +70,6 @@ function createChart (xvalue, yvalue, linevalue) {
 
   return {
     update: function (data) {
-      console.log(data.map(d => [xvalue(d), yvalue(d)]))
       // Scale the range of the data
       x.domain(d3.extent(data, xvalue))
       y.domain([0, d3.max(data, yvalue)])
@@ -82,11 +81,26 @@ function createChart (xvalue, yvalue, linevalue) {
 function getData () {
   d3.csv('training.csv', function (error, data) {
     if (error) { console.error(error) }
+
+    data.sort((da, db) => da['#Iters'] - db['#Iters'])
+    data.forEach((d, i) => {
+      let delta = i ? d['Seconds'] - data[i - 1]['Seconds'] : 0
+      if (delta < 0) {
+        // this happens at the boundary between log files (every 10000 iterations)
+        delta = 0
+      }
+      d['DeltaSeconds'] = delta
+    })
+
+    console.log(data)
+
     const kernel = normaliseKernel([0.1, 0.2, 0.3, 0.2, 0.1]) // gaussian smoothing
     convolute(data, kernel, d => +d['TrainingLoss'], 'SmoothedLoss')
+
     charts.forEach(chart => chart.update(data))
-    const elapsedMin = d3.max(data, d => +d['Seconds']) / 60
+    const elapsedMin = d3.sum(data, d => +d['DeltaSeconds']) / 60
     const iterations = d3.max(data, d => +d['#Iters'])
+    document.querySelector('#iters').innerHTML = Math.round(iterations)
     document.querySelector('#elapsed').innerHTML = Math.round(elapsedMin)
     document.querySelector('#iters_per_min').innerHTML = Math.round(iterations / elapsedMin)
   })
