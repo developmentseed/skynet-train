@@ -30,6 +30,7 @@ parser.add_argument('--cpu', action='store_true')
 parser.add_argument('--gpu', type=int, nargs='*', default=[0])
 parser.add_argument('--batch-size', type=int)
 parser.add_argument('--crop-size', type=int)
+parser.add_argument('--lr-step-size', type=int, default=30)
 parser.add_argument('--display-frequency', type=int, default=100)
 parser.add_argument('--sync', type=str)
 args = parser.parse_args()
@@ -64,12 +65,17 @@ def setup_solver(train_net_path, epoch, previous_solver=None, **kwargs):
         for key, value in kwargs.iteritems():
             if key == 'solver_type':
                 value = solver_types[value].number
+            if key == 'stepsize':
+                value = value * epoch
+
             setattr(s, key, value)
     else:
         for key, default_value in defaults.iteritems():
             value = kwargs.get(key, default_value)
             if key == 'solver_type':
                 value = solver_types[value].number
+            if key == 'stepsize':
+                value = value * epoch
             setattr(s, key, value)
     s.train_net = train_net_path
     return str(s)
@@ -99,7 +105,8 @@ def snapshot_run(starting_snapshot_iteration, snapshot_iterations):
     epoch = int(math.ceil(float(train_size) / batch_size / parallel))
     solver = setup_solver(train_net_path, epoch, previous_solver,
                           max_iter=max_iterations,
-                          snapshot=snapshot_iterations)
+                          snapshot=snapshot_iterations,
+                          stepsize=args.lr_step_size)
 
     solver_file = 'solver_%s-%s.prototxt' % (starting_snapshot_iteration, max_iterations)
     solver_path = os.path.join(args.output, solver_file)

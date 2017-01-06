@@ -60,6 +60,13 @@ Customize the training run with these params:
 [--sync SYNC]
 ```
 
+## Monitoring
+
+On an instance where training is happening, expose a simple monitoring page with:
+
+```sh
+docker run --rm -it -v /mnt/training:/output -p 80:8080 developmentseed/skynet-monitor
+```
 
 # Details
 

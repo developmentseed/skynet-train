@@ -1,0 +1,35 @@
+<!doctype html><html>
+<head>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <style>
+  body { font: 12px Arial;}
+
+  svg { display: block; }
+
+  path { 
+      stroke: steelblue;
+      stroke-width: 2;
+      fill: none;
+  }
+
+  .axis path,
+  .axis line {
+      fill: none;
+      stroke: grey;
+      stroke-width: 1;
+      shape-rendering: crispEdges;
+  }
+  </style>
+</head>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+
+<table>
+  <tr><td>Elapsed (min):</td><td id='elapsed'></td></tr>
+  <tr><td>Iterations / min:</td><td id='iters_per_min'></td></tr>
+</table>
+
+<script src="monitor.js"></script>
+
+</body>
+</html>
