@@ -2,10 +2,10 @@
 
 var charts = []
 
-charts.push(createChart(d => +d['#Iters'], d => +d['TrainingLoss']))
+charts.push(createChart(d => +d['#Iters'], d => +d['TrainingLoss'], d => +d['SmoothedLoss']))
 charts.push(createChart(d => +d['#Iters'], d => +d['LearningRate']))
 
-function createChart (xvalue, yvalue) {
+function createChart (xvalue, yvalue, linevalue) {
   // Set the dimensions of the canvas / graph
   var margin = {top: 30, right: 20, bottom: 30, left: 50}
   var width = 600 - margin.left - margin.right
@@ -24,8 +24,9 @@ function createChart (xvalue, yvalue) {
 
   // Define the line
   var valueline = d3.svg.line()
+      .interpolate('basis')
       .x(d => x(xvalue(d)))
-      .y(d => y(yvalue(d)))
+      .y(d => y(linevalue(d)))
 
   // Adds the svg canvas
   var svg = d3.select('body')
@@ -48,9 +49,21 @@ function createChart (xvalue, yvalue) {
 
   function update (data) {
     svg.selectAll('path').remove()
-    svg.append('path')
-      .attr('class', 'line')
-      .attr('d', valueline(data))
+    const circle = svg.selectAll('circle')
+      .data(data)
+
+    circle.enter().append('circle').attr('class', 'point')
+    circle
+      .attr('cx', d => x(xvalue(d)))
+      .attr('cy', d => y(yvalue(d)))
+      .attr('r', 1)
+
+    if (linevalue) {
+      svg.append('path')
+        .attr('class', 'line')
+        .attr('d', valueline(data))
+    }
+
     svg.select('.x.axis').call(xAxis)
     svg.select('.y.axis').call(yAxis)
   }
@@ -69,6 +82,8 @@ function createChart (xvalue, yvalue) {
 function getData () {
   d3.csv('training.csv', function (error, data) {
     if (error) { console.error(error) }
+    const kernel = normaliseKernel([0.1, 0.2, 0.3, 0.2, 0.1]) // gaussian smoothing
+    convolute(data, kernel, d => +d['TrainingLoss'], 'SmoothedLoss')
     charts.forEach(chart => chart.update(data))
     const elapsedMin = d3.max(data, d => +d['Seconds']) / 60
     const iterations = d3.max(data, d => +d['#Iters'])
@@ -77,3 +92,49 @@ function getData () {
   })
 }
 
+// from http://bl.ocks.org/tomgp/6770520
+function convolute (data, kernel, accessor, target) {
+  var kernelCenter = Math.floor(kernel.length / 2)
+  // var leftSize = kernelCenter
+  // var rightSize = kernel.length - (kernelCenter - 1)
+  if (accessor === undefined) {
+    accessor = function (datum) {
+      return datum
+    }
+  }
+
+  function constrain (i, range) {
+    if (i < range[0]) {
+      i = 0
+    }
+    if (i > range[1]) {
+      i = range[1]
+    }
+    return i
+  }
+
+  data.forEach(function (d, i) {
+    var s = 0
+    for (var k = 0; k < kernel.length; k++) {
+      var index = constrain((i + (k - kernelCenter)), [0, data.length - 1])
+      s += kernel[k] * accessor(data[index])
+    }
+    data[i][target] = s
+  })
+}
+
+function normaliseKernel (a) {
+  function arraySum (a) {
+    var s = 0
+    for (var i = 0; i < a.length; i++) {
+      s += a[i]
+    }
+    return s
+  }
+  var sumA = arraySum(a)
+  var scaleFactor = sumA / 1
+  a = a.map(function (d) {
+    return d / scaleFactor
+  })
+  return a
+}
