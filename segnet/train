@@ -65,6 +65,9 @@ def setup_solver(train_net_path, epoch, previous_solver=None, **kwargs):
         for key, value in kwargs.iteritems():
             if key == 'solver_type':
                 value = solver_types[value].number
+            if key == 'stepsize':
+                value = value * epoch
+
             setattr(s, key, value)
     else:
         for key, default_value in defaults.iteritems():
