@@ -93,7 +93,7 @@ def get_image_tile(url, x, y, z):
     resp = requests.get(image_url)
     if not resp.ok:
         raise TileNotFoundError({'status': resp.status_code, 'content': resp.content})
-    return Image.open(StringIO.StringIO(resp.content))
+    return Image.open(StringIO.StringIO(resp.content)).convert('RGB')
 
 
 def upload_centerlines(filename, output_bucket, prefix):
