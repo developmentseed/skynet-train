@@ -10,13 +10,13 @@ var argv = require('minimist')(process.argv.slice(2), {
   },
   default: {
     region: 'us-east-1',
-    'instance-type': 'g2.2xlarge',
+    'instance-type': 'p2.xlarge',
     'iam-role': null
   }
 })
 
 if (!argv['ssh-keypath'] || argv._.length !== 1) {
-  console.log('Usage: ' + process.argv[1] + ' --ssh-keypath /path/to/private/key [--instance-type g2.2xlarge] [--region us-east-1] [--iam-role IAM_role] machine_name')
+  console.log('Usage: ' + process.argv[1] + ' --ssh-keypath /path/to/private/key [--instance-type p2.xlarge] [--region us-east-1] [--iam-role IAM_role] machine_name')
   process.exit(1)
 }
 
