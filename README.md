@@ -16,7 +16,9 @@ with a GPU--necessary for reasonable training times---you will need a machine
 set up to use [`nvidia-docker`](https://github.com/NVIDIA/nvidia-docker).  (The
 [start_instance](https://github.com/developmentseed/skynet-train/blob/master/start_instance)
 script uses `docker-machine` to spin up an AWS EC2 g2 instance and set it up with
-nvidia-docker.)
+nvidia-docker. The [start_spot_instance](https://github.com/developmentseed/skynet-train/blob/master/start_spot_instance)
+script does the same thing but creates a [spot](https://aws.amazon.com/ec2/spot/)
+instance instead of an on demand one.)
 
 1. Create a training dataset with [skynet-data](https://github.com/developmentseed/skynet-data).
 2. Run:
