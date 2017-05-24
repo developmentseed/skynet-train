@@ -5,7 +5,10 @@ import os, sys
 
 CODE_2_MEANING = 'Code 2: invalid arguements'
 CODE_1_MEANING = 'Code 1: Absent Data'
-tfrecords_filename = 'skynet.tfrecords'
+
+
+def _float_feature(value):
+    return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
 
 def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
@@ -13,13 +16,16 @@ def _bytes_feature(value):
 def _int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
+
 def main(args=None):
     """
     :param args: List of arguments
-    :arg -d file path to the data output directory of skynet-data, required. The skynet.tfrecords file will also be put in this directory.
+    :arg -d file path to the data output directory of skynet-data, required. The <manifest>.tfrecords file will also be put in this directory.
+    :arg -m the manifest file, usually train.txt or val.txt, required.
     :returns: Nothing
-    side effects: writes file tfrecords file <dataDir>/skynet.tfrecords containing training data
+    side effects: writes file tfrecords file <dataDir>/<manifest>.tfrecords containing training data
     """
+    tfrecords_filename = '.tfrecords'
     dataDir = ""
     process = False
     if args == None:
@@ -40,6 +46,10 @@ def main(args=None):
             i += 1
             arg = args[i]
             dataDir = arg
+        elif arg == '-m':
+            i += 1
+            arg = args[i]
+            manifest = arg
         else:
             print('Unrecognized flag ' + arg)
             print(CODE_2_MEANING)
@@ -49,13 +59,18 @@ def main(args=None):
         print('You must provide the location of the training data with the -d arg')
         print(CODE_2_MEANING)
         sys.exit(2)
+    if manifest == "":
+        print('You must provide the location of the manifest with the -m arg')
+        print(CODE_2_MEANING)
+        sys.exit(2)
     if not os.path.isdir(dataDir):
         print('The data directory you supplied with the -d arg does not exist or is not a directory')
         print(CODE_2_MEANING)
         sys.exit(2)
+    tfrecords_filename = manifest[:-4] + tfrecords_filename
     writer = tf.python_io.TFRecordWriter(tfrecords_filename)
 
-    train = open(dataDir + '/train.txt', 'r')
+    train = open(dataDir + '/' + manifest, 'r')
     trainLabels = []
     trainImages = []
     for line in train:
@@ -83,10 +98,17 @@ def main(args=None):
             'height': _int64_feature(height),
             'width': _int64_feature(width),
             'image_raw': _bytes_feature(imgRaw),
-            'mask_raw': _int64_feature(label)}))
+            'label_raw': _int64_feature(label)}))
         writer.write(pair.SerializeToString())
 
-main("read_skynet_data.py -d /Users/devmcdevlin/skynet-data/data")
+
+def read_data(loc, manifestName):
+    print("reading " + manifestName)
+    main("read_skynet_data.py -d " + loc + " -m " + manifestName + '.txt')
+
+
+#test main("read_skynet_data.py -d /Users/devmcdevlin/skynet-data/data -m train.txt")
+
 
 if __name__ == "__main__":
     try:

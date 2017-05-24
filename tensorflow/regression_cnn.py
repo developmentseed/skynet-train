@@ -1,14 +1,14 @@
 import tensorflow as tf
+from read_skynet_data import read_data
+import os
 
-#import data
-from read_mnist import read_data
-datasource = read_data("./data")
+
 
 SIDE = 256 #size of an image side
 
 #tf graph input
-image = tf.placeholder(dtype=tf.int8, shape=[SIDE, SIDE]) #image matrix
-label = tf.placehlder(dtype=tf.int16, shape = []) #label scalar
+image = tf.placeholder(dtype=tf.float32, shape=[SIDE, SIDE]) #image matrix
+label = tf.placeholder(dtype=tf.float32, shape = []) #label scalar
 keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
 
 # Parameters
@@ -20,6 +20,75 @@ display_step = 1000
 # Network Parameters
 n_input = SIDE*SIDE # size of an image
 dropout = 0.75 # No clue what this means: Dropout, probability to keep units
+
+#import data
+dataDir = '/Users/devmcdevlin/skynet-data/data'
+#read_data(dataDir, 'train'); read_data(dataDir, 'val')
+TRAIN_FILE = dataDir + 'train.tfrecords'
+VALIDATION_FILE = dataDir + 'val.tfrecords'
+
+def read_and_decode(filename_queue):
+  reader = tf.TFRecordReader()
+  _, serialized_example = reader.read(filename_queue)
+  features = tf.parse_single_example(
+      serialized_example,
+      # Defaults are not specified since both keys are required.
+      features={
+          'image_raw': tf.FixedLenFeature([], tf.string),
+          'label': tf.FixedLenFeature([], tf.string),
+      })
+
+  # Convert from a scalar string tensor (whose single string has
+  # length mnist.IMAGE_PIXELS) to a uint8 tensor with shape
+  # [mnist.IMAGE_PIXELS].
+  image = tf.decode_raw(features['image_raw'], tf.uint8)
+  image.set_shape([SIDE*SIDE])
+  image = tf.reshape(image, [SIDE, SIDE])
+
+  # Convert label from a scalar uint8 tensor to an int32 scalar.
+  label = tf.decode_raw(features['label'], tf.int64)
+  label.set_shape([1])
+
+  return image, label
+
+
+def inputs(train, batch_size, num_epochs):
+  """Reads input data num_epochs times.
+  Args:
+    train: Selects between the training (True) and validation (False) data.
+    batch_size: Number of examples per returned batch.
+    num_epochs: Number of times to read the input data, or 0/None to
+       train forever.
+  Returns:
+    A tuple (images, labels), where:
+    * images is a float tensor with shape [batch_size, shapes^2]
+      in the range [-0.5, 0.5].
+    * labels is an float32 tensor with shape [batch_size] with the true label,
+      a number in the range [0, shapes^2].
+    Note that an tf.train.QueueRunner is added to the graph, which
+    must be run using e.g. tf.train.start_queue_runners().
+  """
+  if not num_epochs: num_epochs = None
+  filename = TRAIN_FILE if train else VALIDATION_FILE
+
+  with tf.name_scope('input'):
+    filename_queue = tf.train.string_input_producer(
+        [filename], num_epochs=num_epochs)
+
+    # Even when reading in multiple threads, share the filename
+    # queue.
+    image, label = read_and_decode(filename_queue)
+
+    # Shuffle the examples and collect them into batch_size batches.
+    # (Internally uses a RandomShuffleQueue.)
+    # We run this in two threads to avoid being a bottleneck.
+    images, sparse_labels = tf.train.shuffle_batch(
+        [image, label], batch_size=batch_size, num_threads=2,
+        capacity=1000 + 3 * batch_size,
+        # Ensures a minimum amount of shuffling of examples.
+        min_after_dequeue=1000)
+
+    return images, sparse_labels
 
 
 # Create some wrappers for simplicity
@@ -101,14 +170,15 @@ with tf.Session() as sess:
     step = 1
     # Keep training until reach max iterations
     while step * batch_size < training_iters:
-        batch_x, batch_y = datasource.train.next_batch(batch_size)
+        images, labels = inputs(train=True, batch_size=batch_size,
+                                num_epochs=1)
         # Run optimization op (backprop)
-        sess.run(optimizer, feed_dict={image: batch_x, label: batch_y,
+        sess.run(optimizer, feed_dict={image: images, label: labels,
                                        keep_prob: dropout})
         if step % display_step == 0:
             # Calculate batch loss and accuracy
-            loss, acc = sess.run([cost, accuracy], feed_dict={image: batch_x,
-                                                              label: batch_y,
+            loss, acc = sess.run([cost, accuracy], feed_dict={image: images,
+                                                              label: labels,
                                                               keep_prob: 1.})
             print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
                   "{:.6f}".format(loss) + ", Training Accuracy= " + \
@@ -117,7 +187,8 @@ with tf.Session() as sess:
     print("Optimization Finished!")
 
     # Calculate accuracy for 256 mnist test images
+    images, labels = inputs(train=False, batch_size=256, num_epochs=1)
     print("Testing Accuracy:", \
-        sess.run(accuracy, feed_dict={image: datasource.test.images[:256],
-                                      label: datasource.test.labels[:256],
+        sess.run(accuracy, feed_dict={image: images,
+                                      label: labels,
                                       keep_prob: 1.}))
