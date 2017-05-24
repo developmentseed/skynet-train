@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 #import data
-from read_data import read_data
+from read_mnist import read_data
 datasource = read_data("./data")
 
 SIDE = 256 #size of an image side
