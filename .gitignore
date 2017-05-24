@@ -1,3 +1,5 @@
 node_modules
 temp
 *.pyc
+tensorflow/.idea/**
+*.tfrecords
