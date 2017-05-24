@@ -7,7 +7,11 @@ CODE_2_MEANING = 'Code 2: invalid arguements'
 CODE_1_MEANING = 'Code 1: Absent Data'
 tfrecords_filename = 'skynet.tfrecords'
 
+def _bytes_feature(value):
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
+def _int64_feature(value):
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 def main(args=None):
     """
@@ -26,8 +30,8 @@ def main(args=None):
         print("Usage:")
         print("python read_skynet_data.py -d path/to/skynet-data/output [-f]")
         sys.exit(0)
+
     i = 1
-    print args
     while i < len(args):
         arg = args[i]
         if arg == '-p':
@@ -62,11 +66,12 @@ def main(args=None):
         imagePath = dataDir + imagePath[5:]
         #also remove the newling
         labelPath = dataDir + labelPath[5:-1]
-
         image = io.imread(imagePath, as_grey=True)
         image = np.array(image)
+        image = (image*255).astype('byte') #scale to fit byte data type
         height = image.shape[0]
         width = image.shape[1]
+        imgRaw = image.tostring()
 
         labelAr = io.imread(labelPath, as_grey=True)
         labelAr = np.array(labelAr)
@@ -74,7 +79,12 @@ def main(args=None):
         #hence the following line
         label = width*height - np.count_nonzero(labelAr)
 
-
+        pair = tf.train.Example(features=tf.train.Features(feature={
+            'height': _int64_feature(height),
+            'width': _int64_feature(width),
+            'image_raw': _bytes_feature(imgRaw),
+            'mask_raw': _int64_feature(label)}))
+        writer.write(pair.SerializeToString())
 
 main("read_skynet_data.py -d /Users/devmcdevlin/skynet-data/data")
 
