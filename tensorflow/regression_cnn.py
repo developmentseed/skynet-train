@@ -19,7 +19,7 @@ display_step = 1000
 
 # Network Parameters
 n_input = SIDE*SIDE # size of an image
-dropout = 0.75 # No clue what this means: Dropout, probability to keep units
+dropout = 0.75 #Dropout, probability to keep units
 
 #import data
 dataDir = '/Users/devmcdevlin/skynet-data/data'
@@ -137,10 +137,10 @@ weights = {
     'wc1': tf.Variable(tf.random_normal([5, 5, 1, 32])),
     # 5x5 conv, 32 inputs, 64 outputs
     'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
-    # fully connected, 7*7*64 inputs, 1024 outputs
-    'wd1': tf.Variable(tf.random_normal([7*7*64, 1024])),
+    # fully connected, 32*64 inputs, 1024 outputs
+    'wd1': tf.Variable(tf.random_normal([32*64, 1024])),
     # 1024 inputs, 1 output (label prediction)
-    'out': tf.Variable(tf.random_normal([1024]))
+    'out': tf.Variable(tf.random_normal([1024, 1]))
 }
 
 biases = {
@@ -154,11 +154,11 @@ biases = {
 pred = conv_net(image, weights, biases, keep_prob)
 
 # Define loss and optimizer
-cost = tf.reduce_mean(tf.squared_diffrence(pred, label))
+cost = tf.reduce_mean(tf.squared_difference(pred, label))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # Evaluate model
-correct_pred = tf.squared_diffrence(pred, label)
+correct_pred = tf.squared_difference(pred, label)
 accuracy = tf.reduce_mean(correct_pred)
 
 # Initializing the variables
@@ -173,6 +173,8 @@ with tf.Session() as sess:
         images, labels = inputs(train=True, batch_size=batch_size,
                                 num_epochs=1)
         # Run optimization op (backprop)
+        images = images.eval()
+        labels = labels.eval()
         sess.run(optimizer, feed_dict={image: images, label: labels,
                                        keep_prob: dropout})
         if step % display_step == 0:
@@ -188,7 +190,9 @@ with tf.Session() as sess:
 
     # Calculate accuracy for 256 mnist test images
     images, labels = inputs(train=False, batch_size=256, num_epochs=1)
+    images = images.eval()
+    labels = labels.eval()
     print("Testing Accuracy:", \
         sess.run(accuracy, feed_dict={image: images,
-                                      label: labels,
+                                      label: labels,r
                                       keep_prob: 1.}))
