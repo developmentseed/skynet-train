@@ -1,0 +1,17 @@
+{
+  "name": "tilestitch-experiments",
+  "version": "0.0.1",
+  "main": "index.js",
+  "author": "Development Seed",
+  "license": "MIT",
+  "dependencies": {
+    "@mapbox/tilebelt": "^1.0.1",
+    "bluebird": "^3.5.0",
+    "get-pixels": "^3.3.0",
+    "luminance": "^1.0.3",
+    "minimist": "^1.2.0",
+    "ramda": "^0.23.0",
+    "save-pixels": "^2.3.4",
+    "zeros": "^1.0.0"
+  }
+}
