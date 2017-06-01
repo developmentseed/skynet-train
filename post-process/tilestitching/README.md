@@ -5,7 +5,7 @@ Stitching `skynet-train` raster results for better downstream vector outputs
 ## requirements
 1. nodejs & yarn
 2. install dependencies with `yarn`
-3. directory of images with the schema `scene_id/z/x/y.png`
+3. directory of images with the schema `z/x/y.png`
 
 ## run
 ```
