@@ -1,0 +1,5 @@
+in
+out
+*.pyc
+node_modules
+*.swp

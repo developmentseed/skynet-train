@@ -1,0 +1,5 @@
+git+https://github.com/gipit/gippy.git@develop
+pyproj==1.9.5.1
+pygeotile==1.0.0
+numpy==1.12.1
+six==1.10.0
