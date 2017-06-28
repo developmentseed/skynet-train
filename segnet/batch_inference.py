@@ -130,8 +130,15 @@ def run_batch(queue_name, image_tiles, model, weights, classes, gpu, cpu_only):
     for message in receive(queue_name):
         try:
             click.echo('processing: %s' % message.body)
-            (output_bucket, prefix, z, x, y) = json.loads(message.body)
-
+            #load variables from message json
+            message_json = json.loads(message.body)
+            z = message_json['z']
+            x = message_json['x']
+            y = message_json['y']
+            prefix = message_json['prefix']
+            output_bucket = message_json['output_bucket']
+            
+            #get a raster object for the tile from the image_tiles server
             image = get_image_tile(image_tiles, x, y, z)
 
             # run prediction
