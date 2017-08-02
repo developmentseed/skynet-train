@@ -17,3 +17,5 @@ In addition to the usage shown in the main [README](https://github.com/developme
   ]
 }
 ```
+
+The `dist` folder can be served with [your preferred command](https://gist.github.com/willurd/5720255) and you can access the results at `http://localhost:8000/view.html?access_token=your_access_token`
