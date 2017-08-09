@@ -1,0 +1,17 @@
+{
+    "batch_size": 16,
+    "batchnorm_momentum": 0.95,
+    "epochs": 10,
+    "lr_base": 0.01,
+    "lr_power": 0.9,
+    "model_name": "AtrousFCN_Resnet50_16s",
+    "weight_decay": 0.00005,
+    "background_weight": 0.1,
+    "vertical_flip": true,
+    "horizontal_flip": true,
+    "zoom_range": [0.5, 2.0],
+    "zoom_maintain_shape": true,
+    "crop_mode": "random",
+    "channel_shift_range": 20.0,
+    "fill_mode": "constant"
+}
