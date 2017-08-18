@@ -1,4 +1,5 @@
 create an ec2 instance with the deep learning ami
+
 copy the contents of this folder into /home/ec2-user/src
 
 run
