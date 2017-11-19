@@ -107,13 +107,12 @@ def upload_centerlines(filename, output_bucket, prefix):
 
 @click.command()
 @click.argument('queue_name')
-@click.option('--image-tiles', type=str)
 @click.option('--model', type=str, default='/model/segnet_deploy.prototxt')
 @click.option('--weights', type=str, default='/model/weights.caffemodel')
 @click.option('--classes', type=str, default='/model/classes.json')
 @click.option('--gpu', type=int, default=0)
 @click.option('--cpu-only', is_flag=True, default=False)
-def run_batch(queue_name, image_tiles, model, weights, classes, gpu, cpu_only):
+def run_batch(queue_name, model, weights, classes, gpu, cpu_only):
     net = setup_net(model, weights, gpu, cpu_only)
     classes_file = resolve_s3(classes)
 
@@ -130,7 +129,7 @@ def run_batch(queue_name, image_tiles, model, weights, classes, gpu, cpu_only):
     for message in receive(queue_name):
         try:
             click.echo('processing: %s' % message.body)
-            (output_bucket, prefix, z, x, y) = json.loads(message.body)
+            (output_bucket, prefix, image_tiles, z, x, y) = json.loads(message.body)
 
             image = get_image_tile(image_tiles, x, y, z)
 

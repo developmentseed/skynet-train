@@ -31,14 +31,14 @@ def receive(queue):
 @click.argument('input', default='-')
 @click.option('--tile-url', type=str)
 @click.option('--dryrun', is_flag=True, default=False)
-def populate(queue_name, output_bucket, tileset, input, tile_url, dryrun):
+def populate(queue_name, output_bucket, tileset, image_tiles, input, tile_url, dryrun):
     """
-    Populate the given SQS queue with tasks of the form [bucket, tileset, z, x, y],
+    Populate the given SQS queue with tasks of the form [bucket, tileset, image_tiles, z, x, y],
     to be consumed by batch_process.py.
 
     Works well with cover.js. E.g.:
 
-    ./cover.js file.geojson 15 16 | python segnet/queue.py my_queue my_bucket my_tileset
+    ./cover.js file.geojson 15 16 | python segnet/queue.py my_queue my_bucket my_tileset "http://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token={MAPBOX_ACCESS_TOKEN}"
     """
 
     try:
@@ -50,7 +50,7 @@ def populate(queue_name, output_bucket, tileset, input, tile_url, dryrun):
     for tile in input:
         tile = (x, y, z) = json.loads(tile.strip())
         count += 1
-        batch.append(json.dumps((output_bucket, tileset, z, x, y)))
+        batch.append(json.dumps((output_bucket, tileset, image_tiles, z, x, y)))
         if (len(batch) == 10):
             send(queue_name, batch, dryrun)
             batch = []
