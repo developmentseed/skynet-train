@@ -28,6 +28,7 @@ def receive(queue):
 @click.argument('queue_name')
 @click.argument('output_bucket')
 @click.argument('tileset')
+@click.argument('image_tiles')
 @click.argument('input', default='-')
 @click.option('--tile-url', type=str)
 @click.option('--dryrun', is_flag=True, default=False)
