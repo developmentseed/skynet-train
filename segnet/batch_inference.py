@@ -43,12 +43,15 @@ def parse_s3_uri(s3uri):
     return (match.group(1), match.group(2))
 
 
-def resolve_s3(s3uri):
+def resolve_s3(s3uri, temp=False):
     parsed = parse_s3_uri(s3uri)
     if not parsed:
         return s3uri
     (bucket, key) = parsed
-    target = '/model/' + os.path.basename(key)
+    if temp:
+        target = '/tmp/' + os.path.basename(key)
+    else:
+        target = '/model/' + os.path.basename(key)
     if not os.path.isfile(target):
         print('downloading ' + s3uri + ' to ' + target)
         s3.download_file(bucket, key, target)
@@ -90,10 +93,19 @@ def make_prediction(net, colors, im, outfile):
 
 def get_image_tile(url, x, y, z):
     image_url = url.replace('{x}', str(x)).replace('{y}', str(y)).replace('{z}', str(z))
-    resp = requests.get(image_url)
-    if not resp.ok:
-        raise TileNotFoundError({'status': resp.status_code, 'content': resp.content})
-    return Image.open(StringIO.StringIO(resp.content)).convert('RGB')
+
+    # First check if image is on S3
+    if 's3://' in image_url:
+        img_to_load = resolve_s3(image_url, temp=True)
+
+    # Otherwise, pull it from other source
+    else:
+        resp = requests.get(image_url)
+        if not resp.ok:
+            raise TileNotFoundError({'status': resp.status_code, 'content': resp.content})
+        img_to_load = StringIO.StringIO(resp.content)
+
+    return Image.open(img_to_load).convert('RGB')
 
 
 def upload_centerlines(filename, output_bucket, prefix):
