@@ -13,7 +13,7 @@ from pygeotile.tile import Tile
 import logging
 
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout)
 
@@ -80,7 +80,7 @@ def trace_line(arr, endpoint):
 def vectorize(img):
     """ Vectorize a raster skeleton """
     # get convolution of 3x3 with skeleton
-    kernel = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])
+    kernel = np.ones((3, 3))
     skel = img[0].skeletonize().read()
     skelconv = img[0].skeletonize().convolve(kernel, boundary=False).read()
     skelconv[skel == 0] = 0
@@ -88,13 +88,19 @@ def vectorize(img):
     # img[2].write(skelconv)
 
     lines = []
-    pts = zip(*np.where(skelconv == 2))
+    # Create list of 2D points
+    pts = [list(coord_arr) for coord_arr in np.where(skelconv == 2)]
+    pts = np.vstack(pts).T
+
     while len(pts) > 0:
-        # start with an endpoint and trace the line
+        # start with an endpoint and trace the entire line, pt by pt
         pt = [pts[0][0], pts[0][1]]
         line = trace_line(skelconv, pt)
         lines.append(line)
-        pts = zip(*np.where(skelconv == 2))
+
+        # Recalculate point list since 1 line has been recorded and removed
+        pts = [list(coord_arr) for coord_arr in np.where(skelconv == 2)]
+        pts = np.vstack(pts).T
     img[2].write(skelconv)
     return lines
 
