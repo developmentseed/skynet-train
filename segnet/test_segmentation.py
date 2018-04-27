@@ -61,7 +61,7 @@ for i in range(0, len(test_data)):
     image = net.blobs['data'].data
     image = np.squeeze(image[0, :, :, :])
     label = net.blobs['label'].data
-    label = np.squeeze(label)
+    label = np.squeeze(label).astype(np.uint8)
     predicted = net.blobs['prob'].data
     predicted = np.squeeze(predicted[0, :, :, :])
 
