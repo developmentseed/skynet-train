@@ -126,5 +126,8 @@ segnet/run_test --output /path/for/test/results/ --train /path/to/segnet_train.p
 This script essentially carries out the instructions outlined here:
 http://mi.eng.cam.ac.uk/projects/segnet/tutorial.html
 
+## GPU
 
-
+These scripts were originally developed for use on an AWS `g2.2xlarge` instance. For support on newer GPUs, it may be required to:
+- use a [newer NVIDIA driver](https://github.com/developmentseed/skynet-train/blob/master/user_data.sh#L22)
+- use a newer version of CUDA. To support CUDA8+, you can use the docker images tagged with `:cuda8`. They are built off an updated [`caffe-segnet` fork](https://github.com/TimoSaemann/caffe-segnet-cudnn5) with support for `cuDNN5`.
