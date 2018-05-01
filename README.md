@@ -126,6 +126,36 @@ segnet/run_test --output /path/for/test/results/ --train /path/to/segnet_train.p
 This script essentially carries out the instructions outlined here:
 http://mi.eng.cam.ac.uk/projects/segnet/tutorial.html
 
+## Inference
+
+After you have a trained and tested network, you'll often want to use it to predict over a larger area. We've included scripts for running this process locally or on AWS.
+
+### Local Inference
+
+To run predictions locally you'll need:
+- Raster imagery (as either a GeoTIFF or a VRT)
+- A line delimited list of [XYZ tile indices](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames) to predict on (e.g. `49757-74085-17`. These can be made with [geodex](https://github.com/developmentseed/geodex))
+- A skynet model, trained weights, and class definitions ( `.prototxt`, `.caffemodel`, `.json`)
+
+To run:
+
+```sh
+docker run -v /path/to/inputs:/inputs -v /path/to/model:/model -v /path/to/output/:/inference \
+  developmentseed:/skynet-run:local-gpu /inputs/raster.tif /inputs/tiles.txt \
+  --model /model/segnet_deploy.prototxt
+  --weights /model/weights.caffemodel
+  --classes /model/classes.json
+  --output /inference
+```
+
+If you are running on a CPU, use the `:local-cpu` docker image and add `--cpu-only` as a final flag to the above command.
+
+The predicted rasters and vectorized geojson outputs will be located in `/inference` (and the corresponding mounted volume)
+
+### AWS Inference
+
+TODO: for now, see command line instructions in `segnet/queue.py` and `segnet/batch_inference.py`
+
 ## GPU
 
 These scripts were originally developed for use on an AWS `g2.2xlarge` instance. For support on newer GPUs, it may be required to:

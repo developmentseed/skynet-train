@@ -97,7 +97,7 @@ def get_image_tile(raster, x, y, z):
 @click.option('--model', type=str, default='/model/segnet_deploy.prototxt')
 @click.option('--weights', type=str, default='/model/weights.caffemodel')
 @click.option('--classes', type=str, default='/model/classes.json')
-@click.option('--output', type=str, default='/data')
+@click.option('--output', type=str, default='/inference')
 @click.option('--gpu', type=int, default=0)
 @click.option('--cpu-only', is_flag=True, default=False)
 def run_batch(raster, tiles, model, weights, classes, output, gpu, cpu_only):
