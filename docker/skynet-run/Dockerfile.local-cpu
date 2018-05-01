@@ -12,7 +12,7 @@ RUN curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
     sudo apt-get install -y nodejs build-essential libagg-dev libpotrace-dev
 
 # Python
-RUN pip install numpy
+RUN pip install numpy==1.14.2
 
 RUN pip install flask && \
     pip install mercantile && \
