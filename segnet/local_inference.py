@@ -14,7 +14,10 @@ sys.path.insert(0, caffe_root + 'python')
 import caffe
 import click
 import numpy as np
-from rio_tiler import main, utils
+import rasterio
+from mercantile import bounds
+from pyproj import Proj, transform
+from PIL import Image
 
 from inference import predict
 from vectorize import vectorize
@@ -57,9 +60,33 @@ def make_prediction(net, colors, im, outfile):
 
 def get_image_tile(raster, x, y, z):
     try:
-        tile, mask = main.tile(raster, x, y, z, None, tilesize=256, nodata=None, alpha=None)
-        tile = utils.array_to_img(tile, mask=mask)
-        return tile.convert('RGB')
+        bound = bounds(x, y, z)
+
+        with rasterio.open(raster) as src:
+            x_res, y_res = src.transform[0], src.transform[4]
+            p1 = Proj({'init': 'epsg:4326'})
+            p2 = Proj(**src.crs)
+
+            # project tile boundaries from lat/lng to source CRS
+            tile_ul_proj = transform(p1, p2, bound.west, bound.north)
+            tile_lr_proj = transform(p1, p2, bound.east, bound.south)
+            # get origin point from the TIF
+            tif_ul_proj = (src.bounds.left, src.bounds.top)
+
+            # use the above information to calculate the pixel indices of the window
+            top = int((tile_ul_proj[1] - tif_ul_proj[1]) / y_res)
+            left = int((tile_ul_proj[0] - tif_ul_proj[0]) / x_res)
+            bottom = int((tile_lr_proj[1] - tif_ul_proj[1]) / y_res)
+            right = int((tile_lr_proj[0] - tif_ul_proj[0]) / x_res)
+
+            window = ((top, bottom), (left, right))
+
+            # read the first three bands (assumed RGB) of the TIF into an array
+            data = np.empty(shape=(3, 256, 256)).astype(src.profile['dtype'])
+            for k in (1, 2, 3):
+                src.read(k, window=window, out=data[k - 1], boundless=True)
+
+            return Image.fromarray(np.moveaxis(data, 0, -1), mode='RGB')
     except Exception as err:
         raise TileNotFoundError(err)
 
@@ -91,7 +118,6 @@ def run_batch(raster, tiles, model, weights, classes, output, gpu, cpu_only):
                 click.echo('processing: %s' % tile)
                 x, y, z = [int(t) for t in tile.strip().split('-')]
                 image = get_image_tile(raster, x, y, z)
-                image.save(op.join(output, '%s_real.png' % tile.strip()))
 
                 # run prediction
                 predicted_file = op.join(output, '%s.png' % tile.strip())
