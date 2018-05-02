@@ -3,7 +3,7 @@ import scipy
 import time
 
 
-def predict(net, label_colors, image=None):
+def predict(net, label_colors, threshold, image=None):
     num_classes = len(label_colors)
 
     if image is not None:
@@ -22,7 +22,7 @@ def predict(net, label_colors, image=None):
     ind = np.argmax(output, axis=0)
     fg = output[:-1, :, :]  # foreground classes only
     bg = np.full(ind.shape, num_classes - 1)
-    ind = np.where(np.max(fg, axis=0) > 0.5, ind, bg)
+    ind = np.where(np.max(fg, axis=0) > threshold, ind, bg)
 
     max_prob = np.max(output, axis=0)
     return labels_to_image(ind, label_colors, max_prob)

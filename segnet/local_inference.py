@@ -3,7 +3,6 @@ import matplotlib
 matplotlib.use('Agg')
 
 import json
-import tempfile
 import os
 from os import path as op
 import sys
@@ -51,10 +50,10 @@ def setup_net(model_file, weights_file, gpu, cpu_only):
                      caffe.TEST)
 
 
-def make_prediction(net, colors, im, outfile):
+def make_prediction(net, colors, im, threshold, outfile):
     bands = len(im.getbands())
     imdata = np.array(im.getdata()).reshape(im.size[0], im.size[1], bands)
-    predicted = predict(net, colors, imdata)
+    predicted = predict(net, colors, threshold, imdata)
     predicted.save(outfile, 'PNG')
 
 
@@ -100,6 +99,7 @@ def get_image_tile(raster, x, y, z):
 @click.option('--output', type=str, default='/inference')
 @click.option('--gpu', type=int, default=0)
 @click.option('--cpu-only', is_flag=True, default=False)
+@click.option('--threshold', type=float, default=0.5)
 def run_batch(raster, tiles, model, weights, classes, output, gpu, cpu_only):
     net = setup_net(model, weights, gpu, cpu_only)
 
@@ -109,19 +109,20 @@ def run_batch(raster, tiles, model, weights, classes, output, gpu, cpu_only):
         colors.append('000000')
         colors = map(lambda rgbstr: tuple(map(ord, rgbstr.decode('hex'))), colors)
 
-    count = 0
-    centerlines = tempfile.NamedTemporaryFile(suffix='.geojson', delete=False)
-    click.echo('geojson output: %s' % centerlines.name)
+    centerlines_file = op.join(output, 'complete.geojson')
+    centerlines = open(centerlines_file, 'w')
+
     with open(tiles) as tile_list:
         for tile in tile_list:
             try:
-                click.echo('processing: %s' % tile)
+                click.echo('processing: %s' % tile.strip())
                 x, y, z = [int(t) for t in tile.strip().split('-')]
                 image = get_image_tile(raster, x, y, z)
+                image.save(op.join(output, '%s_real.png' % tile.strip()))
 
                 # run prediction
                 predicted_file = op.join(output, '%s.png' % tile.strip())
-                make_prediction(net, colors, image, predicted_file)
+                make_prediction(net, colors, image, threshold, predicted_file)
 
                 # trace raster -> polygons
                 polygonized_file = op.join(output, '%s.geojson' % tile.strip())
@@ -140,7 +141,7 @@ def run_batch(raster, tiles, model, weights, classes, output, gpu, cpu_only):
             except Exception as err:
                 click.echo(err)
 
-        centerlines.close()
+    centerlines.close()
 
 
 if __name__ == '__main__':
