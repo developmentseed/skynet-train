@@ -1,3 +1,6 @@
+> [!WARNING]
+> This repository is not actively maintained and is in archive mode.
+
 
 # SegNet training and testing scripts
 
